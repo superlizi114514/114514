@@ -126,4 +126,27 @@ router.get('/available-titles', authMiddleware, async (c) => {
   return c.json({ success: true, titles, currentTitle: user.title || null, showTitle: user.showTitle === 1 })
 })
 
+// 更新昵称
+router.post('/nickname', authMiddleware, async (c) => {
+  const db = c.get('db') as Database
+  const userId = c.get('userId')
+  const { nickname } = await c.req.json()
+
+  if (!nickname || nickname.trim().length === 0) {
+    return c.json({ success: false, message: '昵称不能为空' })
+  }
+
+  if (nickname.length > 20) {
+    return c.json({ success: false, message: '昵称最多 20 个字符' })
+  }
+
+  const user = await db.findUserById(userId)
+  if (!user) {
+    return c.json({ success: false, message: '用户不存在' })
+  }
+
+  await db.updateUserNickname(userId, nickname.trim())
+  return c.json({ success: true, message: '昵称已更新' })
+})
+
 export default router

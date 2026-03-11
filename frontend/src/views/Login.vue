@@ -75,7 +75,7 @@
             type="password"
             label="确认密码"
             placeholder="请再次输入密码"
-            :rules="[{ required: true, message: '请确认密码' }, { validator: (val: string) => val === inviteForm.value.password, message: '两次密码不一致' }]"
+            :rules="[{ required: true, message: '请确认密码' }, { validator: validatePasswordMatch, message: '两次密码不一致' }]"
             left-icon="lock-o"
           />
 
@@ -227,7 +227,7 @@ const emailRules = [
   {
     message: '邮箱格式不正确',
     validator: (value: string) => {
-      // 允许 admin@admin 这种测试邮箱
+      // 允许特殊邮箱格式：admin@admin
       if (value === 'admin@admin') return true
       // 允许邀请码格式：xxx@yyy@invite
       if (value.endsWith('@invite')) return true
@@ -301,6 +301,11 @@ const copyWechat = () => {
   }).catch(() => {
     showToast('复制失败，请手动复制')
   })
+}
+
+// 邀请码密码验证函数
+const validatePasswordMatch = (val: string): boolean => {
+  return val === inviteForm.value.password
 }
 
 const onInviteSubmit = async () => {

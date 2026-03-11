@@ -24,7 +24,10 @@
       "Bash(gh pr:*)",
       "WebFetch(domain:juejin.cn)",
       "WebSearch",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(nslookup:*)",
+      "WebFetch(domain:api.sxhh.online)"
     ]
   }
 }

@@ -1,8 +1,13 @@
 import axios from 'axios'
 
+// 生产环境使用 api.sxhh.online，本地开发使用 localhost
+const API_URL = import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? 'https://api.sxhh.online' : 'http://localhost:8787')
+
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787',
-  timeout: 10000
+  baseURL: API_URL,
+  timeout: 10000,
+  withCredentials: false
 })
 
 http.interceptors.request.use((config) => {

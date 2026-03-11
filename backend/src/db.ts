@@ -63,6 +63,14 @@ export class Database {
     return result!
   }
 
+  async updateUserNickname(id: number, nickname: string): Promise<User> {
+    const result = await this.db
+      .prepare('UPDATE users SET nickname = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? RETURNING *')
+      .bind(nickname, id)
+      .first<User>()
+    return result!
+  }
+
   // ============ EmailCode 操作 ============
   async findEmailCode(email: string, code: string): Promise<EmailCode | null> {
     const result = await this.db
@@ -656,6 +664,27 @@ export class Database {
     `
     const result = await this.db.prepare(sql).bind(type, limit).all()
     return result.results || []
+  }
+
+  // ============ 登录失败限流操作 ============
+  async findFailedLoginAttemptsByIp(ip: string): Promise<number> {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const result = await this.db
+      .prepare('SELECT COUNT(*) as count FROM failed_login_attempts WHERE ip = ? AND createdAt > ?')
+      .bind(ip, oneHourAgo)
+      .first<{ count: number }>()
+    return result?.count || 0
+  }
+
+  async createFailedLoginAttempt(ip: string, email: string): Promise<void> {
+    await this.db
+      .prepare('INSERT INTO failed_login_attempts (ip, email) VALUES (?, ?)')
+      .bind(ip, email)
+      .run()
+  }
+
+  async clearFailedLoginAttempts(ip: string): Promise<void> {
+    await this.db.prepare('DELETE FROM failed_login_attempts WHERE ip = ?').bind(ip).run()
   }
 }
 

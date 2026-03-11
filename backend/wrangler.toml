@@ -25,3 +25,8 @@ RESEND_FROM_EMAIL = "noreply@sxhh.online"
 binding = "DB"
 database_name = "shanxin-db"
 database_id = "c209b83e-0b0c-4660-b7ef-83460b9b1ea9"
+
+# 路由配置
+[[routes]]
+pattern = "api.sxhh.online/*"
+zone_name = "sxhh.online"

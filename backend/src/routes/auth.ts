@@ -213,8 +213,10 @@ router.post('/send-email-code', async (c) => {
 
     // 验证邮箱格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    // 允许特殊测试邮箱（如 admin@admin）和邀请码邮箱（@invite 后缀）
-    if (!emailRegex.test(email) && !email.endsWith('@invite') && email !== 'admin@admin') {
+    // 允许特殊邮箱格式：admin@admin、邀请码邮箱（@invite 后缀）
+    const isAdminEmail = email === 'admin@admin'
+    const isInviteEmail = email.endsWith('@invite')
+    if (!emailRegex.test(email) && !isAdminEmail && !isInviteEmail) {
       return c.json({ success: false, message: '邮箱格式不正确' })
     }
 
@@ -268,12 +270,19 @@ router.post('/send-email-code', async (c) => {
 // 登录
 router.post('/login', async (c) => {
   const db = c.get('db') as Database
+  const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown'
 
   try {
     const { email, code, password } = await c.req.json()
 
     if (!email) {
       return c.json({ success: false, message: '请输入邮箱' })
+    }
+
+    // 检查 IP 登录失败次数（防暴力破解）
+    const loginAttempts = await db.findFailedLoginAttemptsByIp(ip)
+    if (loginAttempts >= 5) {
+      return c.json({ success: false, message: '登录失败次数过多，请稍后再试' })
     }
 
     let user = await db.findUserByEmail(email)
@@ -288,6 +297,8 @@ router.post('/login', async (c) => {
       }
       const inputHash = await hashPassword(password)
       if (inputHash !== user.passwordHash) {
+        // 记录失败尝试
+        await db.createFailedLoginAttempt(ip, email)
         return c.json({ success: false, message: '密码错误' })
       }
     }
@@ -310,6 +321,9 @@ router.post('/login', async (c) => {
     } else {
       return c.json({ success: false, message: '请输入密码或验证码' })
     }
+
+    // 登录成功，清除该 IP 的失败记录
+    await db.clearFailedLoginAttempts(ip)
 
     // 生成 JWT Token
     const secret = new TextEncoder().encode(c.env.JWT_SECRET)
