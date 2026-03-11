@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(rm:*)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(sed:*)",
+      "Bash(mv:*)",
+      "Bash(netstat:*)",
+      "Bash(powershell:*)",
+      "Bash(lsof:*)",
+      "Bash(wrangler d1:*)",
+      "Bash(printf '%s' 'lzlz58205820')",
+      "Bash(openssl dgst -sha256)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(printf %s:*)",
+      "Bash(npx wrangler:*)",
+      "Bash(cp:*)",
+      "Bash(gh pr:*)",
+      "WebFetch(domain:juejin.cn)",
+      "WebSearch",
+      "Bash(dir:*)"
+    ]
+  }
+}

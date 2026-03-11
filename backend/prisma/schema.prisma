@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "sqlite"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  phone        String?   @unique
+  passwordHash String?
+  nickname     String?
+  avatar       String?
+  deviceId     String?
+  isVip        Boolean   @default(false)
+  isSvip       Boolean   @default(false)
+  vipExpire    DateTime?
+  svipExpire   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profiles        Profile[]
+  reviews         ProfileReview[]
+  reportedReports Report[]
+  merchantReviews MerchantReview[]
+  supportRecords  SupportRecord[]
+  inviteCodes     InviteCode[]
+}
+
+model SupportRecord {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  amount     Float
+  message    String?
+  wechat     String?
+  status     String    @default("pending")
+  approvedBy String?
+  approvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model EmailCode {
+  id        Int      @id @default(autoincrement())
+  email     String
+  code      String
+  isUsed    Boolean  @default(false)
+  expireAt  DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+}
+
+model CaptchaCode {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @unique
+  code      String
+  isUsed    Boolean  @default(false)
+  expireAt  DateTime
+  createdAt DateTime @default(now())
+
+  @@index([sessionId, expireAt])
+}
+
+model SmsCode {
+  id        Int      @id @default(autoincrement())
+  phone     String
+  code      String
+  type      String
+  isUsed    Boolean  @default(false)
+  expireAt  DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  campus    String?
+  className String?
+  isPublic  Boolean  @default(true)
+  type      String   @default("red")
+  remark    String?
+  createdAt DateTime @default(now())
+
+  user    User            @relation(fields: [userId], references: [id])
+  reviews ProfileReview[]
+
+  @@index([userId, createdAt])
+}
+
+model ProfileReview {
+  id          Int      @id @default(autoincrement())
+  reviewerId  Int
+  profileId   Int
+  type        String
+  content     String?
+  isAnonymous Boolean  @default(true)
+  totalCount  Int      @default(0)  // 实际投票数
+  bigVotes    Int      @default(0)  // 大票数（标记用）
+  smallVotes  Int      @default(0)  // 小票数（标记用）
+  createdAt   DateTime @default(now())
+
+  reviewer User     @relation(fields: [reviewerId], references: [id])
+  profile  Profile  @relation(fields: [profileId], references: [id])
+  reports  Report[]
+
+  @@index([profileId, createdAt])
+  @@index([reviewerId, profileId, createdAt])
+}
+
+model Report {
+  id         Int       @id @default(autoincrement())
+  reviewId   Int
+  reviewType String
+  reporterId Int
+  reason     String
+  status     String    @default("pending")
+  handlerId  Int?
+  handledAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  review         ProfileReview?  @relation(fields: [reviewId], references: [id])
+  merchantReview MerchantReview? @relation(fields: [reviewId], references: [id])
+  reporter       User            @relation(fields: [reporterId], references: [id])
+
+  @@index([status, createdAt])
+}
+
+model Merchant {
+  id        Int      @id @default(autoincrement())
+  name      String
+  category  String?
+  address   String?
+  phone     String?
+  createdAt DateTime @default(now())
+
+  reviews MerchantReview[]
+
+  @@index([name, createdAt])
+}
+
+model MerchantReview {
+  id          Int      @id @default(autoincrement())
+  reviewerId  Int
+  merchantId  Int
+  rating      Int?
+  type        String
+  content     String?
+  isAnonymous Boolean  @default(true)
+  totalCount  Int      @default(0)  // 实际投票数
+  bigVotes    Int      @default(0)  // 大票数（标记用）
+  smallVotes  Int      @default(0)  // 小票数（标记用）
+  createdAt   DateTime @default(now())
+
+  reviewer User     @relation(fields: [reviewerId], references: [id])
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  reports  Report[]
+
+  @@index([merchantId, createdAt])
+}
+
+model BlockedWord {
+  id        Int      @id @default(autoincrement())
+  word      String   @unique
+  category  String   @default("insult")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([category, isActive])
+}
+
+model InviteCode {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  createdBy Int
+  usedBy    Int?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
+
+  creator User @relation(fields: [createdBy], references: [id])
+
+  @@index([code, isActive])
+}
