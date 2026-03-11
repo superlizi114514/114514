@@ -9,7 +9,7 @@
     <div class="auth-card" v-if="!isAuthenticated">
       <van-icon name="lock" class="auth-icon" />
       <h2>管理员验证</h2>
-      <p class="auth-tip">仅限 admin@admin.admin 用户访问</p>
+      <p class="auth-tip">仅限管理员用户访问</p>
       <van-button type="primary" block round @click="goToLogin">
         前往登录
       </van-button>
@@ -199,7 +199,7 @@
                 <van-tag v-if="user.isSvip" type="primary" size="small">SVIP</van-tag>
                 <van-tag v-else-if="user.isMvip" type="success" size="small">MVIP</van-tag>
                 <van-tag v-else-if="user.isVip" type="warning" size="small">VIP</van-tag>
-                <van-tag v-else-if="user.email === 'admin@admin.admin'" type="danger" size="small">管理员</van-tag>
+                <van-tag v-else-if="isAdminEmail(user.email)" type="danger" size="small">管理员</van-tag>
               </div>
               <div class="user-meta">
                 <span class="uid">UID: {{ user.id }}</span>
@@ -210,9 +210,9 @@
             <div class="user-actions-popup">
               <van-button size="mini" type="primary" plain @click="openTitleSetting(user)">设置称号</van-button>
               <van-button size="mini" type="primary" plain @click="viewUserDetail(user)">详情</van-button>
-              <van-button size="mini" type="success" plain @click="showGrantSupport(user)" v-if="user.email !== 'admin@admin.admin'">赞助</van-button>
-              <van-button size="mini" type="warning" plain @click="showSetVip(user)" v-if="user.email !== 'admin@admin.admin'">设置 VIP</van-button>
-              <van-button size="mini" type="danger" plain @click="confirmDeleteUser(user)" v-if="user.email !== 'admin@admin.admin'">删除</van-button>
+              <van-button size="mini" type="success" plain @click="showGrantSupport(user)" v-if="!isAdminEmail(user.email)">赞助</van-button>
+              <van-button size="mini" type="warning" plain @click="showSetVip(user)" v-if="!isAdminEmail(user.email)">设置 VIP</van-button>
+              <van-button size="mini" type="danger" plain @click="confirmDeleteUser(user)" v-if="!isAdminEmail(user.email)">删除</van-button>
             </div>
           </div>
         </div>
@@ -265,8 +265,8 @@
             <span class="detail-value">{{ formatDate(currentUser.createdAt) }}</span>
           </div>
           <div class="detail-actions">
-            <van-button plain block type="primary" @click="resetUserReviews(currentUser)" v-if="currentUser.email !== 'admin@admin.admin'">刷新点评次数</van-button>
-            <van-button plain block type="warning" @click="resetUserPassword(currentUser)" v-if="currentUser.email !== 'admin@admin.admin'">重置密码</van-button>
+            <van-button plain block type="primary" @click="resetUserReviews(currentUser)" v-if="!isAdminEmail(currentUser.email)">刷新点评次数</van-button>
+            <van-button plain block type="warning" @click="resetUserPassword(currentUser)" v-if="!isAdminEmail(currentUser.email)">重置密码</van-button>
           </div>
         </div>
       </div>
@@ -700,12 +700,16 @@ const supportLevel = computed(() => {
   return '' // 金额 < 15 元时不开通会员
 })
 
-// 检查是否是 admin@admin.admin 用户
+// 检查是否是管理员用户（支持 admin@admin 和 admin@admin.admin）
+const isAdminEmail = (email: string) => {
+  return email === 'admin@admin' || email === 'admin@admin.admin'
+}
+
 const checkAdminUser = async () => {
   try {
     const { data } = await http.get('/api/auth/me')
     if (data.success && data.user) {
-      if (data.user.email === 'admin@admin.admin') {
+      if (isAdminEmail(data.user.email)) {
         isAuthenticated.value = true
         return true
       }
