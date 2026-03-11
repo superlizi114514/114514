@@ -104,7 +104,7 @@
         <van-form @submit="onSubmit">
           <van-field
             v-model="form.email"
-            type="email"
+            type="text"
             label="邮箱"
             placeholder="请输入邮箱地址"
             :rules="emailRules"
