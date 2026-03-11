@@ -76,7 +76,7 @@ router.get('/available-titles', authMiddleware, async (c) => {
   const now = new Date()
 
   // 权限组称号（根据用户等级自动获得）
-  if (user.email === 'admin@admin') {
+  if (user.email === 'admin@admin.admin') {
     titles.push('管理员')
     titles.push('站长')
     titles.push('幕后黑手')

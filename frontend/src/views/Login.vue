@@ -227,8 +227,8 @@ const emailRules = [
   {
     message: '邮箱格式不正确',
     validator: (value: string) => {
-      // 允许特殊邮箱格式：admin@admin
-      if (value === 'admin@admin') return true
+      // 允许特殊邮箱格式：admin@admin.admin
+      if (value === 'admin@admin.admin') return true
       // 允许邀请码格式：xxx@yyy@invite
       if (value.endsWith('@invite')) return true
       // 标准邮箱格式验证

@@ -29,7 +29,7 @@ async function authMiddleware(c: any, next: any) {
 async function isAdminMiddleware(c: any, next: any) {
   await authMiddleware(c, next)
   const email = c.get('email')
-  if (email !== 'admin@admin') {
+  if (email !== 'admin@admin.admin') {
     return c.json({ success: false, message: '无权限' }, 403)
   }
 }
@@ -191,7 +191,7 @@ router.get('/users', isAdminMiddleware, async (c) => {
 
   // 检查过期时间，返回正确的 VIP 状态
   const users = (result.results || []).map((user: any) => {
-    const isAdmin = user.email === 'admin@admin'
+    const isAdmin = user.email === 'admin@admin.admin'
     const isSvip = !isAdmin && user.isSvip === 1 && user.svipExpire && new Date(user.svipExpire) > now
     const isMvip = !isAdmin && !isSvip && user.isMvip === 1 && user.mvipExpire && new Date(user.mvipExpire) > now
     const isVip = !isSvip && !isMvip && !isAdmin && user.isVip === 1 && user.vipExpire && new Date(user.vipExpire) > now
@@ -324,7 +324,7 @@ router.get('/users/:id/available-titles', isAdminMiddleware, async (c) => {
   const titles: string[] = []
 
   // 权限组称号
-  if (user.email === 'admin@admin') {
+  if (user.email === 'admin@admin.admin') {
     titles.push('管理员')
     titles.push('站长')
     titles.push('幕后黑手')

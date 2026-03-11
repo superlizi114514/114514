@@ -80,7 +80,7 @@ router.get('/admin/records', async (c) => {
     const { payload } = await jwtVerify(token, secret)
     const email = (payload as any).email
 
-    if (email !== 'admin@admin') {
+    if (email !== 'admin@admin.admin') {
       return c.json({ success: false, message: '无权限' }, 403)
     }
 
@@ -128,7 +128,7 @@ router.post('/admin/approve', async (c) => {
     const userId = (payload as any).userId
     const email = (payload as any).email
 
-    if (email !== 'admin@admin') {
+    if (email !== 'admin@admin.admin') {
       return c.json({ success: false, message: '无权限' }, 403)
     }
 
@@ -172,7 +172,7 @@ router.post('/admin/grant', async (c) => {
     const { payload } = await jwtVerify(token, secret)
     const email = (payload as any).email
 
-    if (email !== 'admin@admin') {
+    if (email !== 'admin@admin.admin') {
       return c.json({ success: false, message: '无权限' }, 403)
     }
 
@@ -217,7 +217,7 @@ router.post('/admin/update-nickname', async (c) => {
     const { payload } = await jwtVerify(token, secret)
     const email = (payload as any).email
 
-    if (email !== 'admin@admin') {
+    if (email !== 'admin@admin.admin') {
       return c.json({ success: false, message: '无权限' }, 403)
     }
 
