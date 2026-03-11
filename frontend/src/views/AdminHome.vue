@@ -700,9 +700,9 @@ const supportLevel = computed(() => {
   return '' // 金额 < 15 元时不开通会员
 })
 
-// 检查是否是管理员用户（支持 admin@admin 和 admin@admin.admin）
+// 检查是否是管理员用户
 const isAdminEmail = (email: string) => {
-  return email === 'admin@admin' || email === 'admin@admin.admin'
+  return email === 'admin@admin'
 }
 
 const checkAdminUser = async () => {

@@ -213,8 +213,8 @@ router.post('/send-email-code', async (c) => {
 
     // 验证邮箱格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    // 允许特殊邮箱格式：admin@admin.admin、邀请码邮箱（@invite 后缀）
-    const isAdminEmail = email === 'admin@admin.admin'
+    // 允许特殊邮箱格式：admin@admin、邀请码邮箱（@invite 后缀）
+    const isAdminEmail = email === 'admin@admin'
     const isInviteEmail = email.endsWith('@invite')
     if (!emailRegex.test(email) && !isAdminEmail && !isInviteEmail) {
       return c.json({ success: false, message: '邮箱格式不正确' })
@@ -541,7 +541,7 @@ router.get('/me', authMiddleware, async (c) => {
       usedVotes += r.totalCount || 0
     })
 
-    const isAdmin = user.email === 'admin@admin.admin'
+    const isAdmin = user.email === 'admin@admin'
     const isSvip = !isAdmin && user.isSvip === 1 && user.svipExpire && new Date(user.svipExpire) > now
     const isMvip = !isAdmin && !isSvip && user.isMvip === 1 && user.mvipExpire && new Date(user.mvipExpire) > now
     const isVip = !isSvip && !isMvip && !isAdmin && user.isVip === 1 && user.vipExpire && new Date(user.vipExpire) > now

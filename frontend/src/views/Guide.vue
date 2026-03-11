@@ -25,7 +25,7 @@
           <div class="step-number">2</div>
           <div class="step-content">
             <div class="step-title">输入邮箱</div>
-            <p class="step-desc">输入你的邮箱地址（测试邮箱：admin@admin.admin）</p>
+            <p class="step-desc">输入你的邮箱地址（测试邮箱：admin@admin）</p>
           </div>
         </div>
         <div class="step">

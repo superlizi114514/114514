@@ -16,16 +16,16 @@ export function getUserIdFromRequest(req: Request): number | null {
   }
 }
 
-// 检查是否为管理员（admin@admin.admin 永远拥有管理员权限）
+// 检查是否为管理员（admin@admin 永远拥有管理员权限）
 export async function isAdmin(userId: number): Promise<boolean> {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) return false
-  // admin@admin.admin 邮箱永远拥有管理员权限
-  if (user.email === 'admin@admin.admin') return true
+  // admin@admin 邮箱永远拥有管理员权限
+  if (user.email === 'admin@admin') return true
   return false
 }
 
 // 同步版本（用于已知用户邮箱的场景）
 export function isAdminSync(email: string): boolean {
-  return email === 'admin@admin.admin'
+  return email === 'admin@admin'
 }

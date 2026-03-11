@@ -214,7 +214,7 @@ const checkLoginStatus = async () => {
       nickname.value = data.user.nickname || ''
 
       // 判断角色
-      if (data.user.email === 'admin@admin.admin') {
+      if (data.user.email === 'admin@admin') {
         userRole.value = 'admin'
       } else if (data.user.isSvip) {
         userRole.value = 'svip'

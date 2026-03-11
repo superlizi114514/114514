@@ -223,7 +223,7 @@ async function checkReviewLimits(
   )
 
   // 用户等级判断
-  const isAdmin = user?.email === 'admin@admin.admin'
+  const isAdmin = user?.email === 'admin@admin'
   const isSvip = !isAdmin && user?.isSvip === 1 && user.svipExpire && new Date(user.svipExpire) > now
   const isVip = !isSvip && !isAdmin && user?.isVip === 1 && user.vipExpire && new Date(user.vipExpire) > now
   const dailyLimit = isAdmin ? 999 : isSvip ? 10 : isVip ? 5 : 3

@@ -137,11 +137,11 @@ const listLoaded = ref(false)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 
-// 检查是否已验证（仅限 admin@admin.admin 用户）
+// 检查是否已验证（仅限 admin@admin 用户）
 const checkAuth = async () => {
   try {
     const { data } = await http.get('/api/auth/me')
-    if (data.success && data.user && data.user.email === 'admin@admin.admin') {
+    if (data.success && data.user && data.user.email === 'admin@admin') {
       return true
     }
   } catch {}

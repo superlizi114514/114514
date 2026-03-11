@@ -295,7 +295,7 @@ const checkLoginStatus = async () => {
       isLoggedIn.value = true
       userEmail.value = data.user.email || ''
       userId.value = data.user.id?.toString() || '-'
-      isAdmin.value = data.user.email === 'admin@admin.admin'
+      isAdmin.value = data.user.email === 'admin@admin'
       isSvip.value = data.user.isSvip || false
       isMvip.value = data.user.isMvip || false
       isVip.value = data.user.isVip || false
@@ -315,7 +315,7 @@ const checkLoginStatus = async () => {
         isVip: data.user.isVip,
         isSvip: data.user.isSvip,
         isMvip: data.user.isMvip,
-        isAdmin: data.user.email === 'admin@admin.admin',
+        isAdmin: data.user.email === 'admin@admin',
         dailyLimit: data.user.dailyLimit,
         remaining: data.user.remaining
       }))
@@ -359,7 +359,7 @@ const refreshQuota = async () => {
         isVip: data.user.isVip,
         isSvip: data.user.isSvip,
         isMvip: data.user.isMvip,
-        isAdmin: data.user.email === 'admin@admin.admin',
+        isAdmin: data.user.email === 'admin@admin',
         dailyLimit: data.user.dailyLimit,
         remaining: data.user.remaining
       }))

@@ -40,7 +40,7 @@ async function authMiddleware(c: any, next: any) {
 async function isAdminMiddleware(c: any, next: any) {
   await authMiddleware(c, next)
   const email = c.get('email')
-  if (email !== 'admin@admin.admin') {
+  if (email !== 'admin@admin') {
     return c.json({ success: false, message: '无权限' }, 403)
   }
 }
@@ -112,8 +112,8 @@ router.post('/use', async (c) => {
     return c.json({ success: false, message: '邀请码不能为空' })
   }
 
-  if (!password || password.length < 6) {
-    return c.json({ success: false, message: '密码至少 6 位' })
+  if (!password || password.length < 6 || password.length > 20) {
+    return c.json({ success: false, message: '密码 6-20 位' })
   }
 
   const inviteCode = await db.findInviteCode(code)

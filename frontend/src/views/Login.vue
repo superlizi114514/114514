@@ -65,8 +65,8 @@
             v-model="inviteForm.password"
             type="password"
             label="密码"
-            placeholder="请设置登录密码"
-            :rules="[{ required: true, message: '请填写密码' }, { pattern: /^.{6,}$/, message: '密码至少 6 位' }]"
+            placeholder="请设置登录密码（6-20 位）"
+            :rules="[{ required: true, message: '请填写密码' }, { pattern: /^.{6,20}$/, message: '密码 6-20 位' }]"
             left-icon="lock-o"
           />
 
@@ -227,8 +227,8 @@ const emailRules = [
   {
     message: '邮箱格式不正确',
     validator: (value: string) => {
-      // 允许特殊邮箱格式：admin@admin.admin
-      if (value === 'admin@admin.admin') return true
+      // 允许特殊邮箱格式：admin@admin
+      if (value === 'admin@admin') return true
       // 允许邀请码格式：xxx@yyy@invite
       if (value.endsWith('@invite')) return true
       // 标准邮箱格式验证

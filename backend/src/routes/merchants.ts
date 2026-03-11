@@ -27,7 +27,7 @@ async function authMiddleware(c: any, next: any) {
 async function isAdminMiddleware(c: any, next: any) {
   await authMiddleware(c, next)
   const email = c.get('email')
-  if (email !== 'admin@admin.admin') {
+  if (email !== 'admin@admin') {
     return c.json({ success: false, message: '无权限' }, 403)
   }
 }
@@ -105,7 +105,7 @@ async function checkReviewLimits(
   )
 
   // 用户等级判断
-  const isAdmin = user?.email === 'admin@admin.admin'
+  const isAdmin = user?.email === 'admin@admin'
   const isSvip = !isAdmin && user?.isSvip === 1 && user.svipExpire && new Date(user.svipExpire) > now
   const isVip = !isSvip && !isAdmin && user?.isVip === 1 && user.vipExpire && new Date(user.vipExpire) > now
   const dailyLimit = isAdmin ? 999 : isSvip ? 10 : isVip ? 5 : 3
