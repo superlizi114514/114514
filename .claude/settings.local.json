@@ -28,7 +28,8 @@
       "WebFetch(domain:github.com)",
       "Bash(nslookup:*)",
       "WebFetch(domain:api.sxhh.online)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(docker pull:*)"
     ]
   }
 }
