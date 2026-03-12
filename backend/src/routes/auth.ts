@@ -352,7 +352,7 @@ router.post('/login', async (c) => {
     await db.clearFailedLoginAttempts(ip)
 
     // 生成 JWT Token
-    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const token = await new SignJWT({ userId: user.id, email: user.email })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('7d')
@@ -523,7 +523,7 @@ async function authMiddleware(c: any, next: any) {
 
   try {
     const token = authHeader.slice(7)
-    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     c.set('userId', (payload as any).userId)
     c.set('email', (payload as any).email)
