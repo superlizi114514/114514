@@ -17,6 +17,7 @@ async function authMiddleware(c: any, next: any) {
     const token = authHeader.slice(7)
     const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
+    console.log('[JWT] Verified payload:', payload)
     c.set('userId', (payload as any).userId)
     c.set('email', (payload as any).email)
     await next()
@@ -28,10 +29,29 @@ async function authMiddleware(c: any, next: any) {
 
 // 检查是否管理员
 async function isAdminMiddleware(c: any, next: any) {
-  await authMiddleware(c, next)
-  const email = c.get('email')
-  if (email !== 'admin@admin') {
-    return c.json({ success: false, message: '无权限' }, 403)
+  const authHeader = c.req.header('Authorization')
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({ success: false, message: '未登录' }, 401)
+  }
+
+  try {
+    const { jwtVerify } = await import('jose')
+    const token = authHeader.slice(7)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+    const { payload } = await jwtVerify(token, secret)
+    const email = (payload as any).email
+    console.log('[Admin] Verified email:', email)
+    c.set('userId', (payload as any).userId)
+    c.set('email', email)
+
+    if (email !== 'admin@admin') {
+      return c.json({ success: false, message: '无权限' }, 403)
+    }
+    await next()
+  } catch (error) {
+    console.error('JWT verification error:', error)
+    return c.json({ success: false, message: 'Token 无效' }, 401)
   }
 }
 
