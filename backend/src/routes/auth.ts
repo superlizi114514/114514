@@ -233,12 +233,18 @@ router.post('/send-email-code', async (c) => {
     }
 
     const captcha = await db.findCaptchaCode(captchaSession)
-    if (!captcha || captcha.isUsed === 1 || new Date(captcha.expireAt) < new Date()) {
-      return c.json({ success: false, message: '图形验证码已过期' })
+    if (!captcha) {
+      return c.json({ success: false, message: '图形验证码不存在，请刷新' })
+    }
+    if (captcha.isUsed === 1) {
+      return c.json({ success: false, message: '图形验证码已使用，请刷新' })
+    }
+    if (new Date(captcha.expireAt) < new Date()) {
+      return c.json({ success: false, message: '图形验证码已过期，请刷新' })
     }
 
     if (captcha.code !== String(captchaCode).toUpperCase()) {
-      return c.json({ success: false, message: '图形验证码错误' })
+      return c.json({ success: false, message: '图形验证码错误，请重新输入' })
     }
 
     // 标记图形验证码已使用

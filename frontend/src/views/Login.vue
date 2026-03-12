@@ -277,17 +277,22 @@ const sendCode = async () => {
 
     if (data.success) {
       showToast('验证码已发送到邮箱')
-      form.value.captcha = '' // 清空图形验证码
+      form.value.captcha = '' // 清空图形验证码输入框
       await loadCaptcha() // 刷新图形验证码
       startCountdown() // 开始倒计时
     } else {
       showToast(data.message || '发送失败')
-      form.value.captcha = '' // 清空图形验证码
+      form.value.captcha = '' // 清空图形验证码输入框
       await loadCaptcha() // 刷新图形验证码
+      // 重新聚焦到验证码输入框
+      setTimeout(() => {
+        const captchaInput = document.querySelector('input[placeholder="输入图形验证码"]') as HTMLInputElement
+        if (captchaInput) captchaInput.focus()
+      }, 100)
     }
-  } catch {
+  } catch (e: any) {
     showToast('发送失败，请重试')
-    form.value.captcha = '' // 清空图形验证码
+    form.value.captcha = '' // 清空图形验证码输入框
     await loadCaptcha() // 刷新图形验证码
   } finally {
     sending.value = false
