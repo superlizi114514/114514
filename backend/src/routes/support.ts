@@ -34,7 +34,7 @@ router.post('/submit', authMiddleware, async (c) => {
     return c.json({ success: false, message: '赞助金额至少 ¥1' })
   }
 
-  await db.createSupportRecord(userId, parseFloat(amount), message || null, wechat || null)
+  await db.createSupportRecord(userId, parseFloat(amount), message || null, wechat || null, null)
   return c.json({ success: true, message: '提交成功！管理员将在 24 小时内处理' })
 })
 
