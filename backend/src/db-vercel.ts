@@ -262,17 +262,23 @@ export class Database {
   }
 
   async countProfileReviewsByReviewerAndProfile(reviewerId: number, profileId: number, start: string, end: string): Promise<number> {
+    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)
+    const startStr = start.replace('T', ' ').substring(0, 19)
+    const endStr = end.replace('T', ' ').substring(0, 19)
     const result = await queryFirst<{ count: number }>(
-      'SELECT COUNT(*) as count FROM profile_reviews WHERE reviewerId = ? AND profileId = ? AND createdAt >= ? AND createdAt < ?',
-      [reviewerId, profileId, start, end]
+      'SELECT COUNT(*) as count FROM profile_reviews WHERE reviewerId = ? AND profileId = ? AND datetime(createdAt) >= ? AND datetime(createdAt) < ?',
+      [reviewerId, profileId, startStr, endStr]
     )
     return result?.count || 0
   }
 
   async findProfileReviewsTodayByReviewer(reviewerId: number, start: string, end: string): Promise<{ totalCount: number }[]> {
+    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)
+    const startStr = start.replace('T', ' ').substring(0, 19)
+    const endStr = end.replace('T', ' ').substring(0, 19)
     return executeQuery<{ totalCount: number }>(
-      'SELECT totalCount FROM profile_reviews WHERE reviewerId = ? AND createdAt >= ? AND createdAt < ?',
-      [reviewerId, start, end]
+      'SELECT totalCount FROM profile_reviews WHERE reviewerId = ? AND datetime(createdAt) >= ? AND datetime(createdAt) < ?',
+      [reviewerId, startStr, endStr]
     )
   }
 
@@ -372,9 +378,12 @@ export class Database {
   }
 
   async findMerchantReviewsTodayByReviewer(reviewerId: number, start: string, end: string): Promise<{ totalCount: number }[]> {
+    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)
+    const startStr = start.replace('T', ' ').substring(0, 19)
+    const endStr = end.replace('T', ' ').substring(0, 19)
     return executeQuery<{ totalCount: number }>(
-      'SELECT totalCount FROM merchant_reviews WHERE reviewerId = ? AND createdAt >= ? AND createdAt < ?',
-      [reviewerId, start, end]
+      'SELECT totalCount FROM merchant_reviews WHERE reviewerId = ? AND datetime(createdAt) >= ? AND datetime(createdAt) < ?',
+      [reviewerId, startStr, endStr]
     )
   }
 
