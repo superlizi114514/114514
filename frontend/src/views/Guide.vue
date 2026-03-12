@@ -143,9 +143,21 @@
       <div class="feature-section">
         <div class="changelog-item">
           <div class="changelog-header" @click="toggleChangelog">
-            <div class="changelog-version">v1.3 - 2026 年 3 月</div>
+            <div class="changelog-version">v1.4 - 2026 年 3 月 12 日</div>
             <van-icon :name="showFullChangelog ? 'up' : 'down'" class="expand-icon" />
           </div>
+          <ul>
+            <li>🔄 修复 D1 SQLite 兼容性问题（RETURNING * 语法）</li>
+            <li>💰 修复赞助管理加载失败问题</li>
+            <li>📊 修复管理后台修改票数功能</li>
+            <li>🏷️ 修复 Logo 显示问题</li>
+            <li>✨ 为所有页面添加加载动画</li>
+            <li>🛡️ 修复数据库字段缺失问题（sponsorName）</li>
+            <li>🔐 移除 vercel.json 硬编码密钥，改用环境变量</li>
+          </ul>
+        </div>
+        <div class="changelog-item more" v-show="showFullChangelog">
+          <div class="changelog-version">v1.3 - 2026 年 3 月</div>
           <ul>
             <li>✨ 新增用户称号系统，管理员可设置自定义称号</li>
             <li>🏷️ 新增 MVIP 等级（¥6/周，每日 8 次点评）</li>
