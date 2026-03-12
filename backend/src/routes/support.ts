@@ -13,7 +13,7 @@ async function authMiddleware(c: any, next: any) {
   try {
     const { jwtVerify } = await import('jose')
     const token = authHeader.slice(7)
-    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     c.set('userId', (payload as any).userId)
     c.set('email', (payload as any).email)
@@ -76,7 +76,7 @@ router.get('/admin/records', async (c) => {
   try {
     const { jwtVerify } = await import('jose')
     const token = authHeader.slice(7)
-    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     const email = (payload as any).email
 
@@ -123,7 +123,7 @@ router.post('/admin/approve', async (c) => {
   try {
     const { jwtVerify } = await import('jose')
     const token = authHeader.slice(7)
-    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     const userId = (payload as any).userId
     const email = (payload as any).email
@@ -168,7 +168,7 @@ router.post('/admin/grant', async (c) => {
   try {
     const { jwtVerify } = await import('jose')
     const token = authHeader.slice(7)
-    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     const email = (payload as any).email
 
@@ -213,7 +213,7 @@ router.post('/admin/update-nickname', async (c) => {
   try {
     const { jwtVerify } = await import('jose')
     const token = authHeader.slice(7)
-    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     const email = (payload as any).email
 
