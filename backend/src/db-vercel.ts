@@ -84,6 +84,16 @@ async function executeRun(sql: string, params: any[] = []): Promise<{ rowsAffect
 
 // 数据库操作类
 export class Database {
+  // 通用查询方法
+  async executeQuery<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+    return executeQuery<T>(sql, params)
+  }
+
+  // 通用执行方法
+  async executeRun(sql: string, params: any[] = []): Promise<{ rowsAffected: number; lastInsertRowId?: number }> {
+    return executeRun(sql, params)
+  }
+
   // ============ User 操作 ============
   async findUserById(id: number): Promise<User | null> {
     return queryFirst<User>('SELECT * FROM users WHERE id = ?', [id])
