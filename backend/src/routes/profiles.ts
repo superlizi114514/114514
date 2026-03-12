@@ -200,7 +200,9 @@ async function checkReviewLimits(
 ): Promise<{ success: boolean; message?: string; todayReviewsForThisProfile?: number }> {
   const user = await db.findUserById(userId)
   const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  // 使用 UTC+8 时间（中国时间）计算当天开始和结束
+  const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 8 * 3600000)
+  const start = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth(), utcNow.getUTCDate()))
   const end = new Date(start)
   end.setDate(end.getDate() + 1)
 

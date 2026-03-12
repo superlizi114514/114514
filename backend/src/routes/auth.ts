@@ -570,22 +570,25 @@ router.get('/me', authMiddleware, async (c) => {
     }
 
     // 计算今日剩余票数
+    // 使用 UTC+8 时间（中国时间）计算当天开始和结束
     const now = new Date()
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 8 * 3600000) // 转换为 UTC+8
+    const start = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth(), utcNow.getUTCDate()))
     const end = new Date(start)
     end.setDate(end.getDate() + 1)
 
     const startStr = start.toISOString()
     const endStr = end.toISOString()
 
-    // 计算今日已用票数（统计所有点评记录的 totalCount）
+    console.log('[/me] time range:', { start: startStr, end: endStr, now: now.toISOString() })
+
     const [profileReviews, merchantReviews] = await Promise.all([
       db.findProfileReviewsTodayByReviewer(userId, startStr, endStr),
       db.findMerchantReviewsTodayByReviewer(userId, startStr, endStr)
     ])
 
-    console.log('[/me] profileReviews:', profileReviews)
-    console.log('[/me] merchantReviews:', merchantReviews)
+    console.log('[/me] profileReviews:', JSON.stringify(profileReviews))
+    console.log('[/me] merchantReviews:', JSON.stringify(merchantReviews))
 
     let usedVotes = 0
     profileReviews.forEach((r) => {
