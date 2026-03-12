@@ -180,7 +180,11 @@ function makeSvg(text: string): string {
 <rect width="120" height="40" fill="#f3f3f3"/>
 <text x="60" y="26" text-anchor="middle" font-size="20" fill="#333">${text}</text>
 </svg>`
-  return `data:image/svg+xml;base64,${btoa(svg)}`
+  // 在 Node.js 环境使用 Buffer 进行 base64 编码
+  const base64 = typeof Buffer !== 'undefined'
+    ? Buffer.from(svg).toString('base64')
+    : btoa(svg)
+  return `data:image/svg+xml;base64,${base64}`
 }
 
 // 简单的 in-memory 验证码存储（生产环境应该使用数据库）
@@ -188,7 +192,11 @@ const captchaStore = new Map<string, { code: string; expireAt: string }>()
 
 // 获取图形验证码
 router.get('/captcha', async (c) => {
-  const sessionId = crypto.randomUUID()
+  // 在 Node.js 和浏览器环境中都兼容
+  const randomUUID = typeof crypto.randomUUID !== 'undefined'
+    ? crypto.randomUUID()
+    : require('crypto').randomUUID()
+  const sessionId = randomUUID
   const text = generateCaptchaText()
   const expireAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 
