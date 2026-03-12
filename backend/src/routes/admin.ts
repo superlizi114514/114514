@@ -419,23 +419,28 @@ router.post('/users/:id/set-vip', isAdminMiddleware, async (c) => {
 router.get('/profiles', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
 
-  const profiles = await (db as any).executeQuery(`
-    SELECT
-      p.*,
-      COUNT(pr.id) as reviewCount
-    FROM profiles p
-    LEFT JOIN profile_reviews pr ON p.id = pr.profileId
-    GROUP BY p.id
-    ORDER BY p.createdAt DESC
-    LIMIT 200
-  `)
+  try {
+    const profiles = await (db as any).executeQuery(`
+      SELECT
+        p.*,
+        COUNT(pr.id) as reviewCount
+      FROM profiles p
+      LEFT JOIN profile_reviews pr ON p.id = pr.profileId
+      GROUP BY p.id
+      ORDER BY p.createdAt DESC
+      LIMIT 200
+    `)
 
-  const formattedProfiles = (profiles || []).map((p: any) => ({
-    ...p,
-    _count: { reviews: p.reviewCount || 0 }
-  }))
+    const formattedProfiles = (profiles || []).map((p: any) => ({
+      ...p,
+      _count: { reviews: p.reviewCount || 0 }
+    }))
 
-  return c.json({ success: true, data: formattedProfiles })
+    return c.json({ success: true, data: formattedProfiles })
+  } catch (e: any) {
+    console.error('Admin profiles error:', e)
+    return c.json({ success: false, message: '获取失败：' + e.message }, 500)
+  }
 })
 
 // 获取人员点评记录
