@@ -46,11 +46,14 @@ async function isAdminMiddleware(c: any, next: any) {
     c.set('email', email)
 
     if (email !== 'admin@admin') {
+      console.log('[Admin] Access denied for email:', email)
       return c.json({ success: false, message: '无权限' }, 403)
     }
+
+    console.log('[Admin] Access granted, proceeding to handler')
     await next()
-  } catch (error) {
-    console.error('JWT verification error:', error)
+  } catch (error: any) {
+    console.error('[Admin] JWT verification error:', error?.message || error)
     return c.json({ success: false, message: 'Token 无效：' + (error as any)?.message }, 401)
   }
 }
