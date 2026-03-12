@@ -15,12 +15,13 @@ async function authMiddleware(c: any, next: any) {
   try {
     const { jwtVerify } = await import('jose')
     const token = authHeader.slice(7)
-    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     c.set('userId', (payload as any).userId)
     c.set('email', (payload as any).email)
     await next()
-  } catch {
+  } catch (error) {
+    console.error('JWT verification error:', error)
     return c.json({ success: false, message: 'Token 无效' }, 401)
   }
 }
