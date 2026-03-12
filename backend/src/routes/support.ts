@@ -93,8 +93,8 @@ router.get('/admin/records', async (c) => {
       LEFT JOIN users u ON s.userId = u.id
       ORDER BY s.createdAt DESC
     `
-    const result = await c.env.DB.prepare(sql).all()
-    const records = result.results || []
+    const result = await (db as any).executeQuery(sql)
+    const records = result || []
 
     // 格式化返回数据
     const formattedRecords = records.map((r: any) => ({
@@ -109,7 +109,7 @@ router.get('/admin/records', async (c) => {
     return c.json({ success: true, records: formattedRecords })
   } catch (e) {
     console.error('Get support records error:', e)
-    return c.json({ success: false, message: 'Token 无效' }, 401)
+    return c.json({ success: false, message: 'Token 无效：' + (e as any)?.message }, 401)
   }
 })
 
