@@ -286,18 +286,31 @@ router.post('/login', async (c) => {
 
   try {
     const { email, code, password } = await c.req.json()
+    console.log('[Login] Request:', { email, hasCode: !!code, hasPassword: !!password, ip })
 
     if (!email) {
       return c.json({ success: false, message: '请输入邮箱' })
     }
 
     // 检查 IP 登录失败次数（防暴力破解）
-    const loginAttempts = await db.findFailedLoginAttemptsByIp(ip)
-    if (loginAttempts >= 5) {
-      return c.json({ success: false, message: '登录失败次数过多，请稍后再试' })
+    try {
+      const loginAttempts = await db.findFailedLoginAttemptsByIp(ip)
+      console.log('[Login] Failed attempts for IP:', loginAttempts)
+      if (loginAttempts >= 5) {
+        return c.json({ success: false, message: '登录失败次数过多，请稍后再试' })
+      }
+    } catch (e: any) {
+      console.error('[Login] Check failed attempts error:', e?.message || e)
     }
 
-    let user = await db.findUserByEmail(email)
+    let user = null
+    try {
+      user = await db.findUserByEmail(email)
+      console.log('[Login] User found:', user ? { id: user.id, email: user.email } : 'null')
+    } catch (e: any) {
+      console.error('[Login] Find user error:', e?.message || e)
+      return c.json({ success: false, message: '数据库查询失败：' + (e?.message || 'Unknown error') }, 500)
+    }
 
     // 密码登录
     if (password) {
@@ -308,6 +321,7 @@ router.post('/login', async (c) => {
         return c.json({ success: false, message: '该账号未设置密码，请使用验证码登录' })
       }
       const inputHash = await hashPassword(password)
+      console.log('[Login] Password hash check:', { input: inputHash, stored: user.passwordHash, match: inputHash === user.passwordHash })
       if (inputHash !== user.passwordHash) {
         // 记录失败尝试
         await db.createFailedLoginAttempt(ip, email)
@@ -358,8 +372,8 @@ router.post('/login', async (c) => {
       needSetPassword: !hasPassword
     })
   } catch (e) {
-    console.error('Login error:', e)
-    return c.json({ success: false, message: '登录失败' }, 500)
+    console.error('[Login] General error:', e)
+    return c.json({ success: false, message: '登录失败：' + (e as any)?.message || 'Unknown error' }, 500)
   }
 })
 
