@@ -156,7 +156,10 @@
     <!-- 赞助者名单 -->
     <div class="content-card">
       <h2>🏆 赞助者名单</h2>
-      <div v-if="supporters.length === 0" class="empty-state">
+      <div v-if="loading" class="loading-state">
+        <van-loading color="#E11D48">加载中...</van-loading>
+      </div>
+      <div v-else-if="supporters.length === 0" class="empty-state">
         <van-empty description="暂无赞助者，成为第一位吧！" />
       </div>
       <div v-else class="supporter-list">
@@ -193,6 +196,7 @@ const form = ref({
 })
 
 const supporters = ref<any[]>([])
+const loading = ref(false)
 
 const selectAmount = (amount: number) => {
   form.value.amount = amount.toString()
@@ -223,6 +227,7 @@ const onSubmit = async () => {
 }
 
 const loadSupporters = async () => {
+  loading.value = true
   try {
     const { data } = await http.get('/api/support/supporters')
     if (data.success) {
@@ -230,6 +235,8 @@ const loadSupporters = async () => {
     }
   } catch (e) {
     console.error('加载赞助者名单失败', e)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -493,6 +500,13 @@ onMounted(() => {
 
 .empty-state {
   padding: 40px 0;
+}
+
+.loading-state {
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .supporter-list {

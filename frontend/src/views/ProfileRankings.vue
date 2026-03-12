@@ -44,7 +44,11 @@
 
     <!-- Rankings List -->
     <div class="list-section">
-      <div v-if="sortedList.length === 0" class="empty-state">
+      <div v-if="loading" class="loading-state">
+        <van-loading color="#EA580C">加载中...</van-loading>
+      </div>
+
+      <div v-else-if="sortedList.length === 0" class="empty-state">
         <van-empty description="暂无榜单数据" />
       </div>
 
@@ -103,6 +107,7 @@ const router = useRouter()
 const listType = ref<'red' | 'black'>('red')
 const timeRange = ref<'all' | 'week' | 'day'>('all')
 const list = ref<any[]>([])
+const loading = ref(false)
 
 const timeTabs = [
   { label: '总榜', value: 'all' },
@@ -119,6 +124,7 @@ const sortedList = computed(() => {
 })
 
 const load = async () => {
+  loading.value = true
   try {
     const response = await http.get(`/api/rankings/profile?type=${listType.value}&timeRange=${timeRange.value}`)
     if (response.data.success) {
@@ -129,6 +135,8 @@ const load = async () => {
   } catch (err) {
     console.error('Load error:', err)
     showToast('加载失败，请重试')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -284,6 +292,13 @@ onActivated(load)
 
 .empty-state {
   padding: 40px 0;
+}
+
+.loading-state {
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .sub-list {

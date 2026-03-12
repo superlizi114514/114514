@@ -57,51 +57,56 @@
 
     <!-- List Section -->
     <div class="list-section">
-      <div class="list-header">
-        <van-icon name="bag-o" class="list-icon" />
-        <span class="list-title">商家列表</span>
-        <span class="list-count" v-if="list.length > 0">{{ list.length }} 家</span>
+      <div v-if="loading" class="loading-state">
+        <van-loading color="#2563EB">加载中...</van-loading>
       </div>
+      <div v-else>
+        <div class="list-header">
+          <van-icon name="bag-o" class="list-icon" />
+          <span class="list-title">商家列表</span>
+          <span class="list-count" v-if="list.length > 0">{{ list.length }} 家</span>
+        </div>
 
-      <div v-if="list.length === 0" class="empty-state">
-        <van-empty description="暂无商家，点击上方表单添加" />
-      </div>
+        <div v-if="list.length === 0" class="empty-state">
+          <van-empty description="暂无商家，点击上方表单添加" />
+        </div>
 
-      <div v-else class="list">
-        <div
-          v-for="item in list"
-          :key="item.id"
-          class="merchant-card"
-          @click="openMerchant(item.id)"
-        >
-          <div class="merchant-icon-wrapper">
-            <div class="merchant-icon">
+        <div v-else class="list">
+          <div
+            v-for="item in list"
+            :key="item.id"
+            class="merchant-card"
+            @click="openMerchant(item.id)"
+          >
+            <div class="merchant-icon-wrapper">
+              <div class="merchant-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 4a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="merchant-content">
+              <div class="merchant-name">{{ item.name }}</div>
+              <div class="merchant-meta">
+                <span v-if="item.category" class="category-tag">{{ item.category }}</span>
+                <span v-if="item.address" class="meta-item">
+                  <van-icon name="location-o" />
+                  {{ item.address }}
+                </span>
+                <span v-if="item.phone" class="meta-item">
+                  <van-icon name="phone-o" />
+                  {{ item.phone }}
+                </span>
+                <span v-if="!item.category && !item.address && !item.phone" class="meta-placeholder">
+                  暂无详细信息
+                </span>
+              </div>
+            </div>
+            <div class="merchant-arrow">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 4a2 2 0 11-4 0 2 2 0 014 0z"/>
+                <polyline points="9 18 15 12 9 6"/>
               </svg>
             </div>
-          </div>
-          <div class="merchant-content">
-            <div class="merchant-name">{{ item.name }}</div>
-            <div class="merchant-meta">
-              <span v-if="item.category" class="category-tag">{{ item.category }}</span>
-              <span v-if="item.address" class="meta-item">
-                <van-icon name="location-o" />
-                {{ item.address }}
-              </span>
-              <span v-if="item.phone" class="meta-item">
-                <van-icon name="phone-o" />
-                {{ item.phone }}
-              </span>
-              <span v-if="!item.category && !item.address && !item.phone" class="meta-placeholder">
-                暂无详细信息
-              </span>
-            </div>
-          </div>
-          <div class="merchant-arrow">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
           </div>
         </div>
       </div>
@@ -117,10 +122,12 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const list = ref<any[]>([])
+const loading = ref(false)
 const form = ref({ name: '', category: '', address: '', phone: '' })
 const submitting = ref(false)
 
 const load = async () => {
+  loading.value = true
   try {
     const { data } = await http.get('/api/merchants')
     if (data.success) {
@@ -130,6 +137,8 @@ const load = async () => {
     }
   } catch {
     showToast('加载失败，请重试')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -302,6 +311,13 @@ onActivated(load)
 
 .empty-state {
   padding: 40px 0;
+}
+
+.loading-state {
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Merchant Card */
