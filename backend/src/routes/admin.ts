@@ -51,7 +51,7 @@ async function isAdminMiddleware(c: any, next: any) {
     await next()
   } catch (error) {
     console.error('JWT verification error:', error)
-    return c.json({ success: false, message: 'Token 无效' }, 401)
+    return c.json({ success: false, message: 'Token 无效：' + (error as any)?.message }, 401)
   }
 }
 
@@ -418,6 +418,7 @@ router.post('/users/:id/set-vip', isAdminMiddleware, async (c) => {
 // 获取人员列表（管理后台）
 router.get('/profiles', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
+  console.log('[Admin /profiles] Starting query')
 
   try {
     const profiles = await (db as any).executeQuery(`
@@ -430,6 +431,7 @@ router.get('/profiles', isAdminMiddleware, async (c) => {
       ORDER BY p.createdAt DESC
       LIMIT 200
     `)
+    console.log('[Admin /profiles] Query result:', profiles?.length)
 
     const formattedProfiles = (profiles || []).map((p: any) => ({
       ...p,
@@ -438,8 +440,9 @@ router.get('/profiles', isAdminMiddleware, async (c) => {
 
     return c.json({ success: true, data: formattedProfiles })
   } catch (e: any) {
-    console.error('Admin profiles error:', e)
-    return c.json({ success: false, message: '获取失败：' + e.message }, 500)
+    console.error('[Admin /profiles] Error:', e)
+    console.error('[Admin /profiles] Error stack:', e?.stack)
+    return c.json({ success: false, message: '获取失败：' + (e?.message || 'Unknown error') }, 500)
   }
 })
 
