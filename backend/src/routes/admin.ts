@@ -38,8 +38,7 @@ async function isAdminMiddleware(c: any, next: any) {
 router.get('/', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
 
-  // 查询举报数据，并关联查询点评和举报人信息
-  const sql = `
+  const reports = await (db as any).executeQuery(`
     SELECT
       r.*,
       u.email as reporterEmail,
@@ -62,13 +61,9 @@ router.get('/', isAdminMiddleware, async (c) => {
     LEFT JOIN profiles p ON pr.profileId = p.id
     ORDER BY r.createdAt DESC
     LIMIT 50
-  `
-  const result = await c.env.DB.prepare(sql).all()
-  const reports = result.results || []
+  `)
 
-  // 处理数据格式
-  const formattedReports = reports.map((rep: any) => {
-    // 根据 reviewType 选择对应的字段
+  const formattedReports = (reports || []).map((rep: any) => {
     const reviewContent = rep.reviewType === 'profile' ? rep.profileReviewContent : rep.merchantReviewContent
     const reviewId = rep.reviewType === 'profile' ? rep.profileReviewId : rep.merchantReviewId
     const reviewerId = rep.reviewType === 'profile' ? rep.profileReviewerId : rep.merchantReviewerId
@@ -126,8 +121,7 @@ router.post('/reports/:id/reject', isAdminMiddleware, async (c) => {
 router.get('/reports/history', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
 
-  // 查询已处理的举报，并关联查询点评和举报人信息
-  const sql = `
+  const reports = await (db as any).executeQuery(`
     SELECT
       r.*,
       u.email as reporterEmail,
@@ -148,15 +142,12 @@ router.get('/reports/history', isAdminMiddleware, async (c) => {
     LEFT JOIN merchant_reviews mr ON r.reviewId = mr.id AND r.reviewType = 'merchant'
     LEFT JOIN merchants m ON mr.merchantId = m.id
     LEFT JOIN profiles p ON pr.profileId = p.id
-    WHERE r.status != ?
+    WHERE r.status != 'pending'
     ORDER BY r.createdAt DESC
     LIMIT 100
-  `
-  const result = await c.env.DB.prepare(sql).bind('pending').all()
-  const reports = result.results || []
+  `)
 
-  // 处理数据格式
-  const formattedReports = reports.map((rep: any) => {
+  const formattedReports = (reports || []).map((rep: any) => {
     const reviewContent = rep.reviewType === 'profile' ? rep.profileReviewContent : rep.merchantReviewContent
     const reviewId = rep.reviewType === 'profile' ? rep.profileReviewId : rep.merchantReviewId
     const reviewerId = rep.reviewType === 'profile' ? rep.profileReviewerId : rep.merchantReviewerId
@@ -184,13 +175,11 @@ router.get('/users', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
   const now = new Date()
 
-  // 查询所有用户字段
-  const result = await c.env.DB
-    .prepare('SELECT id, email, nickname, isVip, isSvip, isMvip, vipExpire, svipExpire, mvipExpire, createdAt, title, showTitle FROM users ORDER BY createdAt DESC LIMIT 100')
-    .all()
+  const users = await (db as any).executeQuery(
+    'SELECT id, email, nickname, isVip, isSvip, isMvip, vipExpire, svipExpire, mvipExpire, createdAt, title, showTitle FROM users ORDER BY createdAt DESC LIMIT 100'
+  )
 
-  // 检查过期时间，返回正确的 VIP 状态
-  const users = (result.results || []).map((user: any) => {
+  const formattedUsers = (users || []).map((user: any) => {
     const isAdmin = user.email === 'admin@admin'
     const isSvip = !isAdmin && user.isSvip === 1 && user.svipExpire && new Date(user.svipExpire) > now
     const isMvip = !isAdmin && !isSvip && user.isMvip === 1 && user.mvipExpire && new Date(user.mvipExpire) > now
@@ -204,7 +193,7 @@ router.get('/users', isAdminMiddleware, async (c) => {
     }
   })
 
-  return c.json({ success: true, data: users })
+  return c.json({ success: true, data: formattedUsers })
 })
 
 // 删除用户
@@ -218,14 +207,13 @@ router.post('/users/:id/delete', isAdminMiddleware, async (c) => {
   }
 
   try {
-    // 删除相关数据（注意顺序：先删除外键引用的表）
-    await c.env.DB.prepare('DELETE FROM invite_codes WHERE createdBy = ?').bind(targetId).run()
-    await c.env.DB.prepare('DELETE FROM support_records WHERE userId = ?').bind(targetId).run()
-    await c.env.DB.prepare('DELETE FROM profile_reviews WHERE reviewerId = ?').bind(targetId).run()
-    await c.env.DB.prepare('DELETE FROM merchant_reviews WHERE reviewerId = ?').bind(targetId).run()
-    await c.env.DB.prepare('DELETE FROM profiles WHERE userId = ?').bind(targetId).run()
-    await c.env.DB.prepare('DELETE FROM reports WHERE reporterId = ?').bind(targetId).run()
-    await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(targetId).run()
+    await (db as any).executeRun('DELETE FROM invite_codes WHERE createdBy = ?', [targetId])
+    await (db as any).executeRun('DELETE FROM support_records WHERE userId = ?', [targetId])
+    await (db as any).executeRun('DELETE FROM profile_reviews WHERE reviewerId = ?', [targetId])
+    await (db as any).executeRun('DELETE FROM merchant_reviews WHERE reviewerId = ?', [targetId])
+    await (db as any).executeRun('DELETE FROM profiles WHERE userId = ?', [targetId])
+    await (db as any).executeRun('DELETE FROM reports WHERE reporterId = ?', [targetId])
+    await (db as any).executeRun('DELETE FROM users WHERE id = ?', [targetId])
 
     return c.json({ success: true, message: '用户已删除' })
   } catch (e: any) {
@@ -249,15 +237,7 @@ router.post('/users/:id/reset-password', isAdminMiddleware, async (c) => {
     return c.json({ success: false, message: '用户不存在' })
   }
 
-  // 计算密码 hash
-  const encoder = new TextEncoder()
-  const data = encoder.encode(newPassword)
-  const hashBuffer = await (crypto as any).subtle.digest('SHA-256', data)
-  const hashArray = new Uint8Array(hashBuffer)
-  const passwordHash = Array.from(hashArray)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-
+  const passwordHash = await (db as any).hashPassword(newPassword)
   await db.updateUser(targetId, { passwordHash })
   return c.json({ success: true, message: '密码已重置' })
 })
@@ -272,9 +252,8 @@ router.post('/users/:id/reset-reviews', isAdminMiddleware, async (c) => {
     return c.json({ success: false, message: '用户不存在' })
   }
 
-  // 删除该用户的所有点评记录
-  await c.env.DB.prepare('DELETE FROM profile_reviews WHERE reviewerId = ?').bind(targetId).run()
-  await c.env.DB.prepare('DELETE FROM merchant_reviews WHERE reviewerId = ?').bind(targetId).run()
+  await (db as any).executeRun('DELETE FROM profile_reviews WHERE reviewerId = ?', [targetId])
+  await (db as any).executeRun('DELETE FROM merchant_reviews WHERE reviewerId = ?', [targetId])
 
   return c.json({ success: true, message: '点评记录已清空' })
 })
@@ -290,7 +269,6 @@ router.post('/users/:id/set-title', isAdminMiddleware, async (c) => {
     return c.json({ success: false, message: '用户不存在' })
   }
 
-  // 称号为空则删除，否则更新
   await db.updateUserTitle(targetId, title || null)
   return c.json({ success: true, message: '称号已更新' })
 })
@@ -323,7 +301,6 @@ router.get('/users/:id/available-titles', isAdminMiddleware, async (c) => {
 
   const titles: string[] = []
 
-  // 权限组称号
   if (user.email === 'admin@admin') {
     titles.push('管理员')
     titles.push('站长')
@@ -340,32 +317,16 @@ router.get('/users/:id/available-titles', isAdminMiddleware, async (c) => {
     titles.push('校园达人')
   }
 
-  // 通用称号
   const commonTitles = [
-    '吃瓜群众',
-    '萌新',
-    '路人甲',
-    '潜水员',
-    '键盘侠',
-    '观察员',
-    '打工人',
-    '干饭王',
-    '学霸',
-    '学渣',
-    '社牛',
-    '社恐',
-    '早八人',
-    '熬夜冠军',
-    '摸鱼达人'
+    '吃瓜群众', '萌新', '路人甲', '潜水员', '键盘侠', '观察员', '打工人',
+    '干饭王', '学霸', '学渣', '社牛', '社恐', '早八人', '熬夜冠军', '摸鱼达人'
   ]
-
   commonTitles.forEach(t => {
     if (!titles.includes(t)) {
       titles.push(t)
     }
   })
 
-  // 自定义称号
   if (user.title) {
     titles.push(user.title)
   }
@@ -387,7 +348,6 @@ router.post('/users/:id/set-vip', isAdminMiddleware, async (c) => {
   const updateData: any = {}
   const now = new Date()
 
-  // 如果设置 MVIP，先关闭 VIP 和 SVIP
   if (isMvip) {
     updateData.isVip = 0
     updateData.isSvip = 0
@@ -399,9 +359,7 @@ router.post('/users/:id/set-vip', isAdminMiddleware, async (c) => {
     } else {
       updateData.mvipExpire = null
     }
-  }
-  // 如果设置 SVIP，先关闭 VIP 和 MVIP
-  else if (isSvip) {
+  } else if (isSvip) {
     updateData.isVip = 0
     updateData.isMvip = 0
     updateData.isSvip = 1
@@ -412,9 +370,7 @@ router.post('/users/:id/set-vip', isAdminMiddleware, async (c) => {
     } else {
       updateData.svipExpire = null
     }
-  }
-  // 如果设置 VIP，先关闭 SVIP 和 MVIP
-  else if (isVip) {
+  } else if (isVip) {
     updateData.isSvip = 0
     updateData.isMvip = 0
     updateData.isVip = 1
@@ -425,9 +381,7 @@ router.post('/users/:id/set-vip', isAdminMiddleware, async (c) => {
     } else {
       updateData.vipExpire = null
     }
-  }
-  // 如果都不是，全部关闭
-  else {
+  } else {
     updateData.isVip = 0
     updateData.isSvip = 0
     updateData.isMvip = 0
@@ -444,8 +398,7 @@ router.post('/users/:id/set-vip', isAdminMiddleware, async (c) => {
 router.get('/profiles', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
 
-  // 获取所有人员，并关联查询点评数量
-  const sql = `
+  const profiles = await (db as any).executeQuery(`
     SELECT
       p.*,
       COUNT(pr.id) as reviewCount
@@ -454,16 +407,14 @@ router.get('/profiles', isAdminMiddleware, async (c) => {
     GROUP BY p.id
     ORDER BY p.createdAt DESC
     LIMIT 200
-  `
-  const result = await c.env.DB.prepare(sql).all()
+  `)
 
-  // 转换数据格式，适配前端期望的 _count.reviews 结构
-  const profiles = (result.results || []).map((p: any) => ({
+  const formattedProfiles = (profiles || []).map((p: any) => ({
     ...p,
     _count: { reviews: p.reviewCount || 0 }
   }))
 
-  return c.json({ success: true, data: profiles })
+  return c.json({ success: true, data: formattedProfiles })
 })
 
 // 获取人员点评记录
@@ -507,8 +458,7 @@ router.post('/profiles/:id/delete', isAdminMiddleware, async (c) => {
     return c.json({ success: false, message: '人员不存在' })
   }
 
-  // 先删除相关点评
-  await c.env.DB.prepare('DELETE FROM profile_reviews WHERE profileId = ?').bind(profileId).run()
+  await (db as any).executeRun('DELETE FROM profile_reviews WHERE profileId = ?', [profileId])
   await db.deleteProfile(profileId)
 
   return c.json({ success: true, message: '人员已删除' })
@@ -518,16 +468,15 @@ router.post('/profiles/:id/delete', isAdminMiddleware, async (c) => {
 router.get('/profiles/export', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
 
-  const result = await c.env.DB.prepare('SELECT * FROM profiles').all()
-  return c.json({ success: true, data: result.results || [] })
+  const result = await (db as any).executeQuery('SELECT * FROM profiles')
+  return c.json({ success: true, data: result || [] })
 })
 
 // 获取商家列表（管理后台）
 router.get('/merchants', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
 
-  // 获取所有商家，并关联查询点评数量
-  const sql = `
+  const merchants = await (db as any).executeQuery(`
     SELECT
       m.*,
       COUNT(mr.id) as reviewCount
@@ -536,16 +485,14 @@ router.get('/merchants', isAdminMiddleware, async (c) => {
     GROUP BY m.id
     ORDER BY m.createdAt DESC
     LIMIT 200
-  `
-  const result = await c.env.DB.prepare(sql).all()
+  `)
 
-  // 转换数据格式，适配前端期望的 _count.reviews 结构
-  const merchants = (result.results || []).map((m: any) => ({
+  const formattedMerchants = (merchants || []).map((m: any) => ({
     ...m,
     _count: { reviews: m.reviewCount || 0 }
   }))
 
-  return c.json({ success: true, data: merchants })
+  return c.json({ success: true, data: formattedMerchants })
 })
 
 // 获取商家点评记录
@@ -601,8 +548,7 @@ router.post('/merchants/:id/delete', isAdminMiddleware, async (c) => {
     return c.json({ success: false, message: '商家不存在' })
   }
 
-  // 先删除相关点评
-  await c.env.DB.prepare('DELETE FROM merchant_reviews WHERE merchantId = ?').bind(merchantId).run()
+  await (db as any).executeRun('DELETE FROM merchant_reviews WHERE merchantId = ?', [merchantId])
   await db.deleteMerchant(merchantId)
 
   return c.json({ success: true, message: '商家已删除' })
