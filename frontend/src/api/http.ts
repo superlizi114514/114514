@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-// 生产环境使用 Vercel 后端，本地开发使用 localhost
+// 生产环境使用 api.sxhh.online，本地开发使用 localhost
 const API_URL = import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? 'https://backend-9uazn52h9-superlizi114514s-projects.vercel.app' : 'http://localhost:8787')
+  (import.meta.env.PROD ? 'https://api.sxhh.online' : 'http://localhost:8787')
 
 const http = axios.create({
   baseURL: API_URL,
