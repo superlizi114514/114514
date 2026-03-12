@@ -122,7 +122,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const list = ref<any[]>([])
-const loading = ref(false)
+const loading = ref(true)
 const form = ref({ name: '', category: '', address: '', phone: '' })
 const submitting = ref(false)
 

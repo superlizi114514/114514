@@ -107,7 +107,7 @@ const router = useRouter()
 const listType = ref<'red' | 'black'>('red')
 const timeRange = ref<'all' | 'week' | 'day'>('all')
 const list = ref<any[]>([])
-const loading = ref(false)
+const loading = ref(true)
 
 const timeTabs = [
   { label: '总榜', value: 'all' },

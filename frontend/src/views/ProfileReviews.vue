@@ -201,7 +201,7 @@ const totalBigVotes = ref<number>(0)
 const totalSmallVotes = ref<number>(0)
 const form = ref({ type: 'red', content: '', count: 1 })
 const submitting = ref(false)
-const loading = ref(false)
+const loading = ref(true)
 
 // 人员信息（包含所有班级和校区）
 const profileInfo = ref<{

@@ -143,7 +143,7 @@ const router = useRouter()
 const redList = ref<any[]>([])
 const blackList = ref<any[]>([])
 const currentTab = ref('')
-const loading = ref(false)
+const loading = ref(true)
 
 const load = async () => {
   loading.value = true

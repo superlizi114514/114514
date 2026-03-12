@@ -109,7 +109,7 @@ import { showToast } from 'vant'
 import http from '../api/http'
 
 const jobs = ref<any[]>([])
-const loading = ref(false)
+const loading = ref(true)
 const keyword = ref('')
 const filterGender = ref('')
 

@@ -193,7 +193,7 @@ const totalSmallVotes = ref<number>(0)
 const form = ref({ type: 'red', content: '', rating: 0, count: 1 })
 const submitting = ref(false)
 const remaining = ref(0)
-const loading = ref(false)
+const loading = ref(true)
 
 // 检查是否可以选择某个票数
 const canSelectCount = (n: number) => {

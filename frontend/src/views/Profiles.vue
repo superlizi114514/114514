@@ -245,7 +245,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const list = ref<any[]>([])
-const loading = ref(false)
+const loading = ref(true)
 const isLoggedIn = ref(false)
 const dailyLimit = ref(3)
 const remaining = ref(0)

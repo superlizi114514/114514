@@ -196,7 +196,7 @@ const form = ref({
 })
 
 const supporters = ref<any[]>([])
-const loading = ref(false)
+const loading = ref(true)
 
 const selectAmount = (amount: number) => {
   form.value.amount = amount.toString()
