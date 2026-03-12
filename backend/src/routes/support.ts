@@ -244,4 +244,81 @@ router.post('/admin/update-nickname', async (c) => {
   }
 })
 
+// 管理员修改赞助金额
+router.post('/admin/update', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({ success: false, message: '未登录' }, 401)
+  }
+
+  try {
+    const { jwtVerify } = await import('jose')
+    const token = authHeader.slice(7)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+    const { payload } = await jwtVerify(token, secret)
+    const email = (payload as any).email
+
+    if (email !== 'admin@admin') {
+      return c.json({ success: false, message: '无权限' }, 403)
+    }
+
+    const { recordId, amount } = await c.req.json()
+    if (!recordId || amount === undefined || amount === null) {
+      return c.json({ success: false, message: '参数不完整' })
+    }
+
+    const db = c.get('db') as Database
+    const id = typeof recordId === 'string' ? parseInt(recordId) : recordId
+    const record = await db.findSupportRecordById(id)
+    if (!record) {
+      return c.json({ success: false, message: '记录不存在' })
+    }
+
+    if (parseFloat(amount) < 0) {
+      return c.json({ success: false, message: '金额不能为负数' })
+    }
+
+    await db.updateSupportRecord(id, { amount: parseFloat(amount) })
+
+    return c.json({ success: true, message: '金额已更新' })
+  } catch (e) {
+    console.error('Update amount error:', e)
+    return c.json({ success: false, message: '操作失败' }, 500)
+  }
+})
+
+// 管理员删除赞助记录
+router.post('/admin/delete', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({ success: false, message: '未登录' }, 401)
+  }
+
+  try {
+    const { jwtVerify } = await import('jose')
+    const token = authHeader.slice(7)
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
+    const { payload } = await jwtVerify(token, secret)
+    const email = (payload as any).email
+
+    if (email !== 'admin@admin') {
+      return c.json({ success: false, message: '无权限' }, 403)
+    }
+
+    const { recordId } = await c.req.json()
+    if (!recordId) {
+      return c.json({ success: false, message: '参数不完整' })
+    }
+
+    const db = c.get('db') as Database
+    const id = typeof recordId === 'string' ? parseInt(recordId) : recordId
+    await db.deleteSupportRecord(id)
+
+    return c.json({ success: true, message: '记录已删除' })
+  } catch (e) {
+    console.error('Delete error:', e)
+    return c.json({ success: false, message: '操作失败' }, 500)
+  }
+})
+
 export default router

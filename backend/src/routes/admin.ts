@@ -464,20 +464,31 @@ router.post('/profiles/:id/update', isAdminMiddleware, async (c) => {
   const profileId = parseInt(c.req.param('id'))
   const { name, campus, className, type, remark } = await c.req.json()
 
+  console.log('[Admin /profiles/:id/update] Request:', { profileId, name, campus, className, type, remark })
+
   const profile = await db.findProfileById(profileId)
   if (!profile) {
+    console.error('[Admin /profiles/:id/update] Profile not found:', profileId)
     return c.json({ success: false, message: '人员不存在' })
   }
 
-  await db.updateProfile(profileId, {
-    name: name || profile.name,
-    campus: campus !== undefined ? campus : profile.campus,
-    className: className !== undefined ? className : profile.className,
-    type: type || profile.type,
-    remark: remark !== undefined ? remark : profile.remark
-  })
+  console.log('[Admin /profiles/:id/update] Found profile:', profile)
 
-  return c.json({ success: true, message: '已更新' })
+  try {
+    await db.updateProfile(profileId, {
+      name: name || profile.name,
+      campus: campus !== undefined ? campus : profile.campus,
+      className: className !== undefined ? className : profile.className,
+      type: type || profile.type,
+      remark: remark !== undefined ? remark : profile.remark
+    })
+
+    console.log('[Admin /profiles/:id/update] Success')
+    return c.json({ success: true, message: '已更新' })
+  } catch (e: any) {
+    console.error('[Admin /profiles/:id/update] Error:', e)
+    return c.json({ success: false, message: '更新失败：' + (e?.message || 'Unknown error') }, 500)
+  }
 })
 
 // 删除人员

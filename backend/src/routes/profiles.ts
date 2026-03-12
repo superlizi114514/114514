@@ -214,6 +214,8 @@ async function checkReviewLimits(
     usedVotes += r.totalCount || 0
   })
 
+  console.log('[checkReviewLimits] userId:', userId, 'usedVotes:', usedVotes, 'voteCount:', voteCount)
+
   // 检查对该人员的今日点评次数（判断是否是大票）
   const todayReviewsForThisProfile = await db.countProfileReviewsByReviewerAndProfile(
     userId,
@@ -227,6 +229,8 @@ async function checkReviewLimits(
   const isSvip = !isAdmin && user?.isSvip === 1 && user.svipExpire && new Date(user.svipExpire) > now
   const isVip = !isSvip && !isAdmin && user?.isVip === 1 && user.vipExpire && new Date(user.vipExpire) > now
   const dailyLimit = isAdmin ? 999 : isSvip ? 10 : isVip ? 5 : 3
+
+  console.log('[checkReviewLimits] dailyLimit:', dailyLimit, 'user:', user)
 
   if (usedVotes + voteCount > dailyLimit) {
     const remaining = Math.max(0, dailyLimit - usedVotes)

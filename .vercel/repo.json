@@ -1,0 +1,17 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_Rbkwgk29rjnYDgosqwtgpVwK6vqw",
+      "name": "backend",
+      "directory": "backend",
+      "orgId": "team_pZihmF0ychhDB7ub7RUk2CHQ"
+    },
+    {
+      "id": "prj_ShpPteuy2PnKj3izbdPesW7oI4tj",
+      "name": "114514",
+      "directory": ".",
+      "orgId": "team_pZihmF0ychhDB7ub7RUk2CHQ"
+    }
+  ]
+}

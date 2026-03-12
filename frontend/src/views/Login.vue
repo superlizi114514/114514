@@ -261,6 +261,12 @@ const sendCode = async () => {
     return
   }
 
+  // 检查是否在倒计时期间（防止快速点击导致图形验证码刷新）
+  if (countdown.value > 0) {
+    showToast('请勿频繁点击')
+    return
+  }
+
   sending.value = true
   try {
     const { data } = await http.post('/api/auth/send-email-code', {
@@ -271,14 +277,18 @@ const sendCode = async () => {
 
     if (data.success) {
       showToast('验证码已发送到邮箱')
-      startCountdown()
+      form.value.captcha = '' // 清空图形验证码
+      await loadCaptcha() // 刷新图形验证码
+      startCountdown() // 开始倒计时
     } else {
       showToast(data.message || '发送失败')
-      await loadCaptcha()
+      form.value.captcha = '' // 清空图形验证码
+      await loadCaptcha() // 刷新图形验证码
     }
   } catch {
     showToast('发送失败，请重试')
-    await loadCaptcha()
+    form.value.captcha = '' // 清空图形验证码
+    await loadCaptcha() // 刷新图形验证码
   } finally {
     sending.value = false
   }

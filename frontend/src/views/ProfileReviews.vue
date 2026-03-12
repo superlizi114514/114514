@@ -277,6 +277,7 @@ const load = async () => {
     if (userData.success && userData.user) {
       remaining.value = userData.user.remaining ?? 0
       dailyLimit.value = userData.user.dailyLimit ?? 3
+      console.log('[load] remaining:', remaining.value, 'dailyLimit:', dailyLimit.value)
     }
   } catch (err: any) {
     console.error('加载失败:', err)
@@ -318,25 +319,56 @@ const createReview = async () => {
       showToast(`点评已提交（${data.bigVotes || 0}大票 + ${data.smallVotes || 0}小票）`)
       form.value.content = ''
       form.value.count = 1
-      load()
+      // 刷新列表和额度
+      await load()
+      // 额外刷新一次用户额度，确保显示最新
+      await loadUserQuota()
     } else {
       showToast(data.message || '提交失败')
     }
-  } catch {
-    showToast('提交失败，请重试')
+  } catch (e: any) {
+    console.error('点评提交失败:', e)
+    const errorMsg = e.response?.data?.message || '提交失败，请重试'
+    showToast(errorMsg)
   } finally {
     submitting.value = false
   }
 }
 
-const report = async (reviewId: number) => {
-  const reason = window.prompt('请输入举报原因')
-  if (!reason) return
-
+// 加载用户剩余额度
+const loadUserQuota = async () => {
   try {
+    const { data } = await http.get('/api/auth/me')
+    if (data.success && data.user) {
+      remaining.value = data.user.remaining ?? 0
+      dailyLimit.value = data.user.dailyLimit ?? 3
+      console.log('[loadUserQuota] remaining:', remaining.value, 'dailyLimit:', dailyLimit.value)
+    }
+  } catch (e: any) {
+    console.error('加载用户额度失败:', e)
+  }
+}
+
+const report = async (reviewId: number) => {
+  try {
+    // 使用 showInputDialog 替代 window.prompt，兼容 iOS
+    const { showInputDialog } = await import('vant')
+
+    const reason = await showInputDialog({
+      title: '举报点评',
+      placeholder: '请输入举报原因',
+      type: 'textarea',
+      cancelButtonText: '取消',
+      confirmButtonText: '提交'
+    })
+
+    if (!reason || !reason.trim()) {
+      return
+    }
+
     const { data } = await http.post('/api/reports/profile', {
       reviewId,
-      reason
+      reason: reason.trim()
     })
 
     if (data.success) {
@@ -344,8 +376,10 @@ const report = async (reviewId: number) => {
     } else {
       showToast(data.message || '提交失败')
     }
-  } catch {
-    showToast('提交失败，请重试')
+  } catch (e: any) {
+    if (e.message !== '取消') {
+      showToast('提交失败，请重试')
+    }
   }
 }
 

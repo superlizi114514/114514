@@ -18,7 +18,10 @@
     <div class="header">
       <div class="header-title-wrapper">
         <h1 class="app-title">山信黑红榜</h1>
-        <img :src="logoImage" alt="logo" class="app-logo" />
+        <div class="logo-group">
+          <img :src="tylooLogo" alt="tyloo" class="app-logo" />
+          <img :src="lvgLogo" alt="lvg" class="app-logo lvg" />
+        </div>
       </div>
       <p class="app-subtitle">山东信院学生的真实点评社区</p>
       <div v-if="isLoggedIn" class="campus-selector-top" @click="showCampusPicker = true">
@@ -264,7 +267,8 @@
 import { onMounted, ref, onActivated } from 'vue'
 import { showToast } from 'vant'
 import http from '../api/http'
-import logoImage from '../assets/tyloo.jpg'
+import tylooLogo from '../assets/tyloo.png'
+import lvgLogo from '../../p/lvg.png'
 
 const isLoggedIn = ref(false)
 const userEmail = ref('')
@@ -478,6 +482,11 @@ onActivated(() => {
   object-fit: cover;
   border-radius: 8px;
   flex-shrink: 0;
+}
+
+.app-logo.lvg {
+  width: 28px;
+  height: 28px;
 }
 
 .app-subtitle {
