@@ -207,8 +207,11 @@ async function checkReviewLimits(
   const startStr = start.toISOString()
   const endStr = end.toISOString()
 
+  console.log('[checkReviewLimits] time range:', { start: startStr, end: endStr, now: now.toISOString() })
+
   // 计算今日已消耗的总票数（每次点评都算 1 票）
   const todayReviews = await db.findProfileReviewsTodayByReviewer(userId, startStr, endStr)
+  console.log('[checkReviewLimits] todayReviews raw:', todayReviews)
   let usedVotes = 0
   todayReviews.forEach((r) => {
     usedVotes += r.totalCount || 0
