@@ -485,8 +485,7 @@ onActivated(() => {
 .app-logo {
   width: 36px;
   height: 36px;
-  object-fit: cover;
-  border-radius: 8px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
