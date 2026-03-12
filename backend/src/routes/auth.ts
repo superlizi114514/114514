@@ -21,21 +21,21 @@ function generateCode(length: number): string {
 }
 
 // 发送邮件函数（支持 Resend/SendGrid/腾讯云）
-async function sendEmailVerification(to: string, code: string, env: any) {
-  console.log('[SendEmail] Starting:', { to, code, hasResendKey: !!env.RESEND_API_KEY })
+async function sendEmailVerification(to: string, code: string) {
+  console.log('[SendEmail] Starting:', { to, code, hasResendKey: !!process.env.RESEND_API_KEY })
 
   // 方案 1: Resend (推荐) - 每月 3000 封免费
-  if (env.RESEND_API_KEY) {
+  if (process.env.RESEND_API_KEY) {
     try {
       console.log('[SendEmail] Using Resend')
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
+          from: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
           to: [to],
           subject: '【山信黑红榜】登录验证码',
           html: `
@@ -221,7 +221,6 @@ router.get('/captcha', async (c) => {
 // 发送邮箱验证码
 router.post('/send-email-code', async (c) => {
   const db = c.get('db') as Database
-  const env = c.env
 
   try {
     const { email, captchaCode, captchaSession } = await c.req.json()
@@ -286,13 +285,13 @@ router.post('/send-email-code', async (c) => {
 
     // 检查环境变量
     console.log('[SendEmailCode] Env check:', {
-      hasResend: !!env.RESEND_API_KEY,
-      hasSendgrid: !!env.SENDGRID_API_KEY,
-      hasTencent: !!(env.TENCENT_SECRET_ID && env.TENCENT_SECRET_KEY)
+      hasResend: !!process.env.RESEND_API_KEY,
+      hasSendgrid: !!process.env.SENDGRID_API_KEY,
+      hasTencent: !!(process.env.TENCENT_SECRET_ID && process.env.TENCENT_SECRET_KEY)
     })
 
     // 发送邮件
-    const sent = await sendEmailVerification(email, code, env)
+    const sent = await sendEmailVerification(email, code)
     console.log('[SendEmailCode] Send result:', sent)
 
     return c.json({
