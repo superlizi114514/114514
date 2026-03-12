@@ -584,6 +584,9 @@ router.get('/me', authMiddleware, async (c) => {
       db.findMerchantReviewsTodayByReviewer(userId, startStr, endStr)
     ])
 
+    console.log('[/me] profileReviews:', profileReviews)
+    console.log('[/me] merchantReviews:', merchantReviews)
+
     let usedVotes = 0
     profileReviews.forEach((r) => {
       usedVotes += r.totalCount || 0
@@ -591,6 +594,8 @@ router.get('/me', authMiddleware, async (c) => {
     merchantReviews.forEach((r) => {
       usedVotes += r.totalCount || 0
     })
+
+    console.log('[/me] usedVotes:', usedVotes, 'dailyLimit:', dailyLimit, 'remaining:', remaining)
 
     const isAdmin = user.email === 'admin@admin'
     const isSvip = !isAdmin && user.isSvip === 1 && user.svipExpire && new Date(user.svipExpire) > now

@@ -26,6 +26,7 @@ build/
 .wrangler/
 
 # Claude 配置
+CLAUDE.md
 .claude/
 
 # 其他项目（只保留 backend 和 frontend）
