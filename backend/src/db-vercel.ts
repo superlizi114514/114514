@@ -108,23 +108,22 @@ export class Database {
   }
 
   async createUser(email: string): Promise<User> {
-    const result = await queryFirst<User>(
-      'INSERT INTO users (email) VALUES (?) RETURNING *',
-      [email]
-    )
-    if (!result) throw new Error('Failed to create user')
-    return result
+    const result = await executeRun('INSERT INTO users (email) VALUES (?)', [email])
+    if (!result.lastInsertRowId) throw new Error('Failed to create user')
+    const user = await this.findUserById(result.lastInsertRowId)
+    if (!user) throw new Error('Failed to create user')
+    return user
   }
 
   async updateUser(id: number, data: Partial<User>): Promise<User> {
     const fields = Object.keys(data).map((k) => `${k} = ?`).join(', ')
     const values = Object.values(data)
-    const result = await queryFirst<User>(
-      `UPDATE users SET ${fields}, updatedAt = CURRENT_TIMESTAMP WHERE id = ? RETURNING *`,
-      [...values, id]
-    )
-    if (!result) throw new Error('Failed to update user')
-    return result
+    // D1 (SQLite) 不支持 RETURNING，需要分开执行
+    await executeRun(`UPDATE users SET ${fields}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`, [...values, id])
+    // 更新后重新查询
+    const user = await this.findUserById(id)
+    if (!user) throw new Error('Failed to update user')
+    return user
   }
 
   async updateUserTitle(id: number, title: string | null): Promise<User> {
@@ -194,23 +193,23 @@ export class Database {
     type?: string,
     remark?: string | null
   ): Promise<Profile> {
-    const result = await queryFirst<Profile>(
-      'INSERT INTO profiles (userId, name, campus, className, isPublic, type, remark) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *',
+    const result = await executeRun(
+      'INSERT INTO profiles (userId, name, campus, className, isPublic, type, remark) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [userId, name, campus || null, className || null, isPublic ? 1 : 0, type || 'red', remark || null]
     )
-    if (!result) throw new Error('Failed to create profile')
-    return result
+    if (!result.lastInsertRowId) throw new Error('Failed to create profile')
+    const profile = await this.findProfileById(result.lastInsertRowId)
+    if (!profile) throw new Error('Failed to create profile')
+    return profile
   }
 
   async updateProfile(id: number, data: Partial<Profile>): Promise<Profile> {
     const fields = Object.keys(data).map((k) => `${k} = ?`).join(', ')
     const values = Object.values(data)
-    const result = await queryFirst<Profile>(
-      `UPDATE profiles SET ${fields} WHERE id = ? RETURNING *`,
-      [...values, id]
-    )
-    if (!result) throw new Error('Failed to update profile')
-    return result
+    await executeRun(`UPDATE profiles SET ${fields} WHERE id = ?`, [...values, id])
+    const profile = await this.findProfileById(id)
+    if (!profile) throw new Error('Failed to update profile')
+    return profile
   }
 
   async deleteProfile(id: number): Promise<void> {
@@ -243,12 +242,14 @@ export class Database {
     bigVotes?: number,
     smallVotes?: number
   ): Promise<ProfileReview> {
-    const result = await queryFirst<ProfileReview>(
-      'INSERT INTO profile_reviews (reviewerId, profileId, type, content, isAnonymous, totalCount, bigVotes, smallVotes) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *',
+    const result = await executeRun(
+      'INSERT INTO profile_reviews (reviewerId, profileId, type, content, isAnonymous, totalCount, bigVotes, smallVotes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [reviewerId, profileId, type, content || null, isAnonymous ? 1 : 0, totalCount || 0, bigVotes || 0, smallVotes || 0]
     )
-    if (!result) throw new Error('Failed to create profile review')
-    return result
+    if (!result.lastInsertRowId) throw new Error('Failed to create profile review')
+    const review = await this.findProfileReviewById(result.lastInsertRowId)
+    if (!review) throw new Error('Failed to create profile review')
+    return review
   }
 
   async updateProfileReview(id: number, data: Partial<ProfileReview>): Promise<void> {
@@ -300,23 +301,23 @@ export class Database {
     address?: string | null,
     phone?: string | null
   ): Promise<Merchant> {
-    const result = await queryFirst<Merchant>(
-      'INSERT INTO merchants (name, category, address, phone) VALUES (?, ?, ?, ?) RETURNING *',
+    const result = await executeRun(
+      'INSERT INTO merchants (name, category, address, phone) VALUES (?, ?, ?, ?)',
       [name, category || null, address || null, phone || null]
     )
-    if (!result) throw new Error('Failed to create merchant')
-    return result
+    if (!result.lastInsertRowId) throw new Error('Failed to create merchant')
+    const merchant = await this.findMerchantById(result.lastInsertRowId)
+    if (!merchant) throw new Error('Failed to create merchant')
+    return merchant
   }
 
   async updateMerchant(id: number, data: Partial<Merchant>): Promise<Merchant> {
     const fields = Object.keys(data).map((k) => `${k} = ?`).join(', ')
     const values = Object.values(data)
-    const result = await queryFirst<Merchant>(
-      `UPDATE merchants SET ${fields} WHERE id = ? RETURNING *`,
-      [...values, id]
-    )
-    if (!result) throw new Error('Failed to update merchant')
-    return result
+    await executeRun(`UPDATE merchants SET ${fields} WHERE id = ?`, [...values, id])
+    const merchant = await this.findMerchantById(id)
+    if (!merchant) throw new Error('Failed to update merchant')
+    return merchant
   }
 
   async deleteMerchant(id: number): Promise<void> {
@@ -346,12 +347,14 @@ export class Database {
     bigVotes?: number,
     smallVotes?: number
   ): Promise<MerchantReview> {
-    const result = await queryFirst<MerchantReview>(
-      'INSERT INTO merchant_reviews (reviewerId, merchantId, type, rating, content, isAnonymous, totalCount, bigVotes, smallVotes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *',
+    const result = await executeRun(
+      'INSERT INTO merchant_reviews (reviewerId, merchantId, type, rating, content, isAnonymous, totalCount, bigVotes, smallVotes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [reviewerId, merchantId, type, rating || null, content || null, isAnonymous ? 1 : 0, totalCount || 0, bigVotes || 0, smallVotes || 0]
     )
-    if (!result) throw new Error('Failed to create merchant review')
-    return result
+    if (!result.lastInsertRowId) throw new Error('Failed to create merchant review')
+    const review = await this.findMerchantReviewById(result.lastInsertRowId)
+    if (!review) throw new Error('Failed to create merchant review')
+    return review
   }
 
   async updateMerchantReview(id: number, data: Partial<MerchantReview>): Promise<void> {
@@ -526,8 +529,8 @@ export class Database {
   }
 
   async createPartTimeJob(data: Partial<PartTimeJob>): Promise<PartTimeJob> {
-    const result = await queryFirst<PartTimeJob>(
-      'INSERT INTO part_time_jobs (name, gender, type, description, priceList, contact, expireAt, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *',
+    const result = await executeRun(
+      'INSERT INTO part_time_jobs (name, gender, type, description, priceList, contact, expireAt, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [
         data.name || '',
         data.gender || '不限',
@@ -539,19 +542,19 @@ export class Database {
         data.isActive !== undefined ? (data.isActive ? 1 : 0) : 1,
       ]
     )
-    if (!result) throw new Error('Failed to create part-time job')
-    return result
+    if (!result.lastInsertRowId) throw new Error('Failed to create part-time job')
+    const job = await this.findPartTimeJobById(result.lastInsertRowId)
+    if (!job) throw new Error('Failed to create part-time job')
+    return job
   }
 
   async updatePartTimeJob(id: number, data: Partial<PartTimeJob>): Promise<PartTimeJob> {
     const fields = Object.keys(data).map((k) => `${k} = ?`).join(', ')
     const values = Object.values(data)
-    const result = await queryFirst<PartTimeJob>(
-      `UPDATE part_time_jobs SET ${fields}, updatedAt = CURRENT_TIMESTAMP WHERE id = ? RETURNING *`,
-      [...values, id]
-    )
-    if (!result) throw new Error('Failed to update part-time job')
-    return result
+    await executeRun(`UPDATE part_time_jobs SET ${fields}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`, [...values, id])
+    const job = await this.findPartTimeJobById(id)
+    if (!job) throw new Error('Failed to update part-time job')
+    return job
   }
 
   async deletePartTimeJob(id: number): Promise<void> {
