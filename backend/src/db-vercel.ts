@@ -8,6 +8,11 @@ const D1_API_TOKEN = process.env.D1_API_TOKEN || 'm5ZWzx5opDcxa-97-MM-_JtnonXNPu
 // D1 API 基础 URL
 const D1_BASE_URL = `https://api.cloudflare.com/client/v4/accounts/${D1_ACCOUNT_ID}/d1/database/${D1_DATABASE_ID}`
 
+// 调试日志
+console.log('[D1] Database ID:', D1_DATABASE_ID)
+console.log('[D1] Account ID:', D1_ACCOUNT_ID)
+console.log('[D1] Base URL:', D1_BASE_URL)
+
 interface D1Response {
   success: boolean
   errors: Array<{ code: number; message: string }>
@@ -23,16 +28,21 @@ interface D1Response {
 
 // 执行 SQL 查询
 async function executeQuery<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+  const requestBody = JSON.stringify({ sql, params, return_meta: true })
+  console.log('[D1] Executing query:', sql, 'params:', params)
+
   const response = await fetch(`${D1_BASE_URL}/query`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${D1_API_TOKEN}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ sql, params, return_meta: true }),
+    body: requestBody,
   })
 
+  console.log('[D1] Response status:', response.status)
   const data: D1Response = await response.json()
+  console.log('[D1] Response:', JSON.stringify(data))
 
   if (!data.success) {
     console.error('D1 query error:', data.errors)
