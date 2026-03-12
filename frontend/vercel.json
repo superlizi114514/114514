@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "framework": "vite",
   "env": {
-    "VITE_API_URL": "https://backend-9uazn52h9-superlizi114514s-projects.vercel.app"
+    "VITE_API_URL": "https://api.sxhh.online"
   },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
