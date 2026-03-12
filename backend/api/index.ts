@@ -64,10 +64,12 @@ app.get('/', (c) => {
 app.use('*', async (c, next) => {
   try {
     const db = createDb()
+    console.log('[DB] Created database instance')
     c.set('db', db)
     await next()
   } catch (error: any) {
     console.error('Database connection error:', error.message)
+    console.error('Database connection error stack:', error.stack)
     return c.json({ success: false, message: 'Database connection error: ' + error.message }, 500)
   }
 })
