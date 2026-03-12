@@ -171,18 +171,25 @@ router.post('/admin/grant', async (c) => {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     const email = (payload as any).email
+    const userId = (payload as any).userId
+
+    console.log('[/admin/grant] Request:', { email, targetUserId: userId })
 
     if (email !== 'admin@admin') {
       return c.json({ success: false, message: '无权限' }, 403)
     }
 
     const { targetUserId, amount, vipDays } = await c.req.json()
+    console.log('[/admin/grant] Params:', { targetUserId, amount, vipDays })
+
     if (!targetUserId || amount === undefined || amount === null) {
       return c.json({ success: false, message: '参数不完整' })
     }
 
     const db = c.get('db') as Database
     const user = await db.findUserById(targetUserId)
+    console.log('[/admin/grant] User found:', user)
+
     if (!user) {
       return c.json({ success: false, message: '用户不存在' })
     }
@@ -190,6 +197,7 @@ router.post('/admin/grant', async (c) => {
     // 只有 vipDays > 0 时才开通 VIP
     if (vipDays && vipDays > 0) {
       const vipExpire = new Date(Date.now() + vipDays * 24 * 60 * 60 * 1000).toISOString()
+      console.log('[/admin/grant] Setting VIP expire:', vipExpire)
       await db.updateUser(targetUserId, { isVip: 1, vipExpire })
     }
 
@@ -199,7 +207,7 @@ router.post('/admin/grant', async (c) => {
     return c.json({ success: true, message: vipDays && vipDays > 0 ? 'VIP 已开通' : '赞助已记录' })
   } catch (e) {
     console.error('Grant error:', e)
-    return c.json({ success: false, message: '操作失败' }, 500)
+    return c.json({ success: false, message: '操作失败：' + (e as any)?.message }, 500)
   }
 })
 
