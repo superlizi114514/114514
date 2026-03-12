@@ -268,7 +268,7 @@ import { onMounted, ref, onActivated } from 'vue'
 import { showToast } from 'vant'
 import http from '../api/http'
 import tylooLogo from '../assets/tyloo.png'
-import lvgLogo from '../../p/lvg.png'
+import lvgLogo from '../assets/lvg.png'
 
 const isLoggedIn = ref(false)
 const userEmail = ref('')
