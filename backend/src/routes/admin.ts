@@ -515,6 +515,38 @@ router.get('/profiles/export', isAdminMiddleware, async (c) => {
   return c.json({ success: true, data: result || [] })
 })
 
+// 修改人员点评票数
+router.post('/profiles/reviews/:id/votes', isAdminMiddleware, async (c) => {
+  const db = c.get('db') as Database
+  const reviewId = parseInt(c.req.param('id'))
+  const { bigVotes, smallVotes } = await c.req.json()
+
+  console.log('[Admin /profiles/reviews/:id/votes] Request:', { reviewId, bigVotes, smallVotes })
+
+  const review = await db.findProfileReviewById(reviewId)
+  if (!review) {
+    return c.json({ success: false, message: '点评记录不存在' })
+  }
+
+  // 验证大票数量：只能是 0 或 1
+  const bigVotesNum = Math.max(0, Math.min(1, parseInt(bigVotes) || 0))
+  // 验证小票数量：0-9
+  const smallVotesNum = Math.max(0, Math.min(9, parseInt(smallVotes) || 0))
+
+  try {
+    await (db as any).executeRun(
+      'UPDATE profile_reviews SET bigVotes = ?, smallVotes = ?, totalCount = ? WHERE id = ?',
+      [bigVotesNum, smallVotesNum, bigVotesNum + smallVotesNum, reviewId]
+    )
+
+    console.log('[Admin /profiles/reviews/:id/votes] Success:', { bigVotes: bigVotesNum, smallVotes: smallVotesNum })
+    return c.json({ success: true, message: '票数已更新' })
+  } catch (e: any) {
+    console.error('[Admin /profiles/reviews/:id/votes] Error:', e)
+    return c.json({ success: false, message: '更新失败：' + (e?.message || 'Unknown error') }, 500)
+  }
+})
+
 // 获取商家列表（管理后台）
 router.get('/merchants', isAdminMiddleware, async (c) => {
   const db = c.get('db') as Database
@@ -595,6 +627,38 @@ router.post('/merchants/:id/delete', isAdminMiddleware, async (c) => {
   await db.deleteMerchant(merchantId)
 
   return c.json({ success: true, message: '商家已删除' })
+})
+
+// 修改商家点评票数
+router.post('/merchants/reviews/:id/votes', isAdminMiddleware, async (c) => {
+  const db = c.get('db') as Database
+  const reviewId = parseInt(c.req.param('id'))
+  const { bigVotes, smallVotes } = await c.req.json()
+
+  console.log('[Admin /merchants/reviews/:id/votes] Request:', { reviewId, bigVotes, smallVotes })
+
+  const review = await db.findMerchantReviewById(reviewId)
+  if (!review) {
+    return c.json({ success: false, message: '点评记录不存在' })
+  }
+
+  // 验证大票数量：只能是 0 或 1
+  const bigVotesNum = Math.max(0, Math.min(1, parseInt(bigVotes) || 0))
+  // 验证小票数量：0-9
+  const smallVotesNum = Math.max(0, Math.min(9, parseInt(smallVotes) || 0))
+
+  try {
+    await (db as any).executeRun(
+      'UPDATE merchant_reviews SET bigVotes = ?, smallVotes = ?, totalCount = ? WHERE id = ?',
+      [bigVotesNum, smallVotesNum, bigVotesNum + smallVotesNum, reviewId]
+    )
+
+    console.log('[Admin /merchants/reviews/:id/votes] Success:', { bigVotes: bigVotesNum, smallVotes: smallVotesNum })
+    return c.json({ success: true, message: '票数已更新' })
+  } catch (e: any) {
+    console.error('[Admin /merchants/reviews/:id/votes] Error:', e)
+    return c.json({ success: false, message: '更新失败：' + (e?.message || 'Unknown error') }, 500)
+  }
 })
 
 export default router
