@@ -116,11 +116,16 @@
 
     <!-- Reviews List -->
     <div class="list-section">
-      <div class="search-tip" v-if="isReadOnly">
-        <van-icon name="info-o" class="tip-icon" />
-        <span class="tip-text">当前为搜索浏览模式，如需点评请前往 <router-link to="/profiles">立马点评</router-link> 页面</span>
+      <div v-if="loading" class="loading-state">
+        <van-loading color="#E11D48">加载中...</van-loading>
       </div>
-      <div class="list-header">
+
+      <div v-else>
+        <div class="search-tip" v-if="isReadOnly">
+          <van-icon name="info-o" class="tip-icon" />
+          <span class="tip-text">当前为搜索浏览模式，如需点评请前往 <router-link to="/profiles">立马点评</router-link> 页面</span>
+        </div>
+        <div class="list-header">
         <van-icon name="comment-circle-o" class="list-icon" />
         <span class="list-title">点评列表</span>
         <div class="list-actions" v-if="totalBigVotes !== undefined || totalSmallVotes !== undefined">
@@ -196,6 +201,7 @@ const totalBigVotes = ref<number>(0)
 const totalSmallVotes = ref<number>(0)
 const form = ref({ type: 'red', content: '', count: 1 })
 const submitting = ref(false)
+const loading = ref(false)
 
 // 人员信息（包含所有班级和校区）
 const profileInfo = ref<{
@@ -207,6 +213,7 @@ const profileInfo = ref<{
 } | null>(null)
 
 const load = async () => {
+  loading.value = true
   try {
     let reviewsRes: any
     let profileRes: any
@@ -282,6 +289,8 @@ const load = async () => {
   } catch (err: any) {
     console.error('加载失败:', err)
     showToast('加载失败，请重试')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -747,6 +756,13 @@ onMounted(load)
 
 .empty-state {
   padding: 40px 0;
+}
+
+.loading-state {
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Review Card */

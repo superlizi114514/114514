@@ -98,11 +98,16 @@
 
     <!-- Reviews List -->
     <div class="list-section">
-      <div class="search-tip" v-if="isReadOnly">
-        <van-icon name="info-o" class="tip-icon" />
-        <span class="tip-text">当前为搜索浏览模式，如需点评请前往 <router-link to="/profiles">立马点评</router-link> 页面</span>
+      <div v-if="loading" class="loading-state">
+        <van-loading color="#2563EB">加载中...</van-loading>
       </div>
-      <div class="list-header">
+
+      <div v-else>
+        <div class="search-tip" v-if="isReadOnly">
+          <van-icon name="info-o" class="tip-icon" />
+          <span class="tip-text">当前为搜索浏览模式，如需点评请前往 <router-link to="/profiles">立马点评</router-link> 页面</span>
+        </div>
+        <div class="list-header">
         <van-icon name="comment-circle-o" class="list-icon" />
         <span class="list-title">点评列表</span>
         <div class="list-actions" v-if="totalBigVotes !== undefined || totalSmallVotes !== undefined">
@@ -188,6 +193,7 @@ const totalSmallVotes = ref<number>(0)
 const form = ref({ type: 'red', content: '', rating: 0, count: 1 })
 const submitting = ref(false)
 const remaining = ref(0)
+const loading = ref(false)
 
 // 检查是否可以选择某个票数
 const canSelectCount = (n: number) => {
@@ -200,6 +206,7 @@ const reportReason = ref('')
 const currentReviewId = ref<number | null>(null)
 
 const load = async () => {
+  loading.value = true
   try {
     // 并行加载列表和用户信息
     const [listRes, userRes] = await Promise.all([
@@ -232,6 +239,8 @@ const load = async () => {
   } catch (err: any) {
     showToast('加载失败，请重试')
     remaining.value = 0
+  } finally {
+    loading.value = false
   }
 }
 
@@ -649,6 +658,13 @@ onMounted(load)
 
 .empty-state {
   padding: 40px 0;
+}
+
+.loading-state {
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Review Card */
