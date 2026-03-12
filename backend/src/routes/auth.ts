@@ -570,17 +570,18 @@ router.get('/me', authMiddleware, async (c) => {
     }
 
     // 计算今日剩余票数
-    // 使用 UTC+8 时间（中国时间）计算当天开始和结束
+    // Vercel 服务器使用 UTC 时区，需要转换为 UTC+8（中国时间）
     const now = new Date()
-    const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 8 * 3600000) // 转换为 UTC+8
-    const start = new Date(Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth(), utcNow.getUTCDate()))
+    // 获取 UTC 时间，然后加上 8 小时偏移
+    const utc8Now = new Date(now.getTime() + 8 * 3600000)
+    const start = new Date(Date.UTC(utc8Now.getUTCFullYear(), utc8Now.getUTCMonth(), utc8Now.getUTCDate()))
     const end = new Date(start)
     end.setDate(end.getDate() + 1)
 
     const startStr = start.toISOString()
     const endStr = end.toISOString()
 
-    console.log('[/me] time range:', { start: startStr, end: endStr, now: now.toISOString() })
+    console.log('[/me] time range:', { start: startStr, end: endStr, now: now.toISOString(), utc8Now: utc8Now.toISOString() })
 
     const [profileReviews, merchantReviews] = await Promise.all([
       db.findProfileReviewsTodayByReviewer(userId, startStr, endStr),
