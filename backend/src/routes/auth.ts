@@ -595,8 +595,6 @@ router.get('/me', authMiddleware, async (c) => {
       usedVotes += r.totalCount || 0
     })
 
-    console.log('[/me] usedVotes:', usedVotes, 'dailyLimit:', dailyLimit, 'remaining:', remaining)
-
     const isAdmin = user.email === 'admin@admin'
     const isSvip = !isAdmin && user.isSvip === 1 && user.svipExpire && new Date(user.svipExpire) > now
     const isMvip = !isAdmin && !isSvip && user.isMvip === 1 && user.mvipExpire && new Date(user.mvipExpire) > now
@@ -604,6 +602,8 @@ router.get('/me', authMiddleware, async (c) => {
 
     const dailyLimit = isAdmin ? 999 : isSvip ? 10 : isMvip ? 8 : isVip ? 5 : 3
     const remaining = Math.max(0, dailyLimit - usedVotes)
+
+    console.log('[/me] usedVotes:', usedVotes, 'dailyLimit:', dailyLimit, 'remaining:', remaining)
 
     return c.json({
       success: true,
