@@ -183,17 +183,19 @@ function makeSvg(text: string): string {
   return `data:image/svg+xml;base64,${btoa(svg)}`
 }
 
+// 简单的 in-memory 验证码存储（生产环境应该使用数据库）
+const captchaStore = new Map<string, { code: string; expireAt: string }>()
+
 // 获取图形验证码
 router.get('/captcha', async (c) => {
-  const db = c.get('db') as Database
   const sessionId = crypto.randomUUID()
   const text = generateCaptchaText()
   const expireAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 
   try {
-    console.log('Creating captcha:', { sessionId, text, expireAt })
-    await db.createCaptchaCode(sessionId, text, expireAt)
-    console.log('Captcha created successfully')
+    captchaStore.set(sessionId, { code: text, expireAt })
+    // 5 分钟后自动清理
+    setTimeout(() => captchaStore.delete(sessionId), 5 * 60 * 1000)
     return c.json({ success: true, sessionId, image: makeSvg(text) })
   } catch (e: any) {
     console.error('Captcha error:', e?.message || e)
