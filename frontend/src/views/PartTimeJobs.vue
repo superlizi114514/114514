@@ -52,11 +52,11 @@
         <van-loading color="#EA580C">加载中...</van-loading>
       </div>
 
-      <div v-else-if="jobs.length === 0" class="empty-state">
+      <div v-else-if="hasLoaded && jobs.length === 0" class="empty-state">
         <van-empty description="暂无兼职信息" />
       </div>
 
-      <div v-else class="jobs-list">
+      <div v-else-if="hasLoaded" class="jobs-list">
         <div
           v-for="item in jobs"
           :key="item.id"
@@ -110,6 +110,7 @@ import http from '../api/http'
 
 const jobs = ref<any[]>([])
 const loading = ref(true)
+const hasLoaded = ref(false)
 const keyword = ref('')
 const filterGender = ref('')
 
@@ -129,6 +130,7 @@ const loadJobs = async () => {
   } catch {
     showToast('加载失败，请重试')
   } finally {
+    hasLoaded.value = true
     loading.value = false
   }
 }

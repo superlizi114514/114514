@@ -159,10 +159,10 @@
       <div v-if="loading" class="loading-state">
         <van-loading color="#E11D48">加载中...</van-loading>
       </div>
-      <div v-else-if="supporters.length === 0" class="empty-state">
+      <div v-else-if="hasLoaded && supporters.length === 0" class="empty-state">
         <van-empty description="暂无赞助者，成为第一位吧！" />
       </div>
-      <div v-else class="supporter-list">
+      <div v-else-if="hasLoaded" class="supporter-list">
         <div
           v-for="item in supporters"
           :key="item.id"
@@ -197,6 +197,7 @@ const form = ref({
 
 const supporters = ref<any[]>([])
 const loading = ref(true)
+const hasLoaded = ref(false)
 
 const selectAmount = (amount: number) => {
   form.value.amount = amount.toString()
@@ -236,6 +237,7 @@ const loadSupporters = async () => {
   } catch (e) {
     console.error('加载赞助者名单失败', e)
   } finally {
+    hasLoaded.value = true
     loading.value = false
   }
 }

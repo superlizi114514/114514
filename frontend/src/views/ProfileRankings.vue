@@ -48,12 +48,16 @@
         <van-loading color="#EA580C">加载中...</van-loading>
       </div>
 
+      <div v-else-if="!hasLoaded && loading" class="loading-state">
+        <van-loading color="#EA580C">加载中...</van-loading>
+      </div>
+
       <div v-else-if="sortedList.length === 0" class="empty-state">
         <van-empty description="暂无榜单数据" />
       </div>
 
       <!-- 红黑榜排行榜 -->
-      <div class="sub-list" v-else>
+      <div class="sub-list" v-else-if="hasLoaded">
         <div class="sub-list-header">
           <van-icon :name="listType === 'red' ? 'like-o' : 'dislike-o'" class="sub-list-icon" :class="listType" />
           <span class="sub-list-title">{{ listType === 'red' ? '红榜' : '黑榜' }}排行榜</span>
@@ -108,6 +112,7 @@ const listType = ref<'red' | 'black'>('red')
 const timeRange = ref<'all' | 'week' | 'day'>('all')
 const list = ref<any[]>([])
 const loading = ref(true)
+const hasLoaded = ref(false)
 
 const timeTabs = [
   { label: '总榜', value: 'all' },
@@ -136,6 +141,7 @@ const load = async () => {
     console.error('Load error:', err)
     showToast('加载失败，请重试')
   } finally {
+    hasLoaded.value = true
     loading.value = false
   }
 }

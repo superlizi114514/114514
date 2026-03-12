@@ -186,7 +186,7 @@
       <div v-if="loading" class="loading-state">
         <van-loading color="#E11D48">加载中...</van-loading>
       </div>
-      <div v-else>
+      <div v-else-if="hasLoaded">
         <div class="list-header">
           <van-icon name="friends-o" class="list-icon" />
           <span class="list-title">人员列表</span>
@@ -246,6 +246,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const list = ref<any[]>([])
 const loading = ref(true)
+const hasLoaded = ref(false)
 const isLoggedIn = ref(false)
 const dailyLimit = ref(3)
 const remaining = ref(0)
@@ -361,6 +362,7 @@ const load = async () => {
     remaining.value = 0
     dailyLimit.value = 3
   } finally {
+    hasLoaded.value = true
     loading.value = false
   }
 }

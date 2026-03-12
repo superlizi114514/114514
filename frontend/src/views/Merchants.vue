@@ -60,7 +60,7 @@
       <div v-if="loading" class="loading-state">
         <van-loading color="#2563EB">加载中...</van-loading>
       </div>
-      <div v-else>
+      <div v-else-if="hasLoaded">
         <div class="list-header">
           <van-icon name="bag-o" class="list-icon" />
           <span class="list-title">商家列表</span>
@@ -123,6 +123,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const list = ref<any[]>([])
 const loading = ref(true)
+const hasLoaded = ref(false)
 const form = ref({ name: '', category: '', address: '', phone: '' })
 const submitting = ref(false)
 
@@ -138,6 +139,7 @@ const load = async () => {
   } catch {
     showToast('加载失败，请重试')
   } finally {
+    hasLoaded.value = true
     loading.value = false
   }
 }

@@ -120,7 +120,7 @@
         <van-loading color="#E11D48">加载中...</van-loading>
       </div>
 
-      <div v-else>
+      <div v-else-if="hasLoaded">
         <div class="search-tip" v-if="isReadOnly">
           <van-icon name="info-o" class="tip-icon" />
           <span class="tip-text">当前为搜索浏览模式，如需点评请前往 <router-link to="/profiles">立马点评</router-link> 页面</span>
@@ -202,6 +202,7 @@ const totalSmallVotes = ref<number>(0)
 const form = ref({ type: 'red', content: '', count: 1 })
 const submitting = ref(false)
 const loading = ref(true)
+const hasLoaded = ref(false)
 
 // 人员信息（包含所有班级和校区）
 const profileInfo = ref<{
@@ -290,6 +291,7 @@ const load = async () => {
     console.error('加载失败:', err)
     showToast('加载失败，请重试')
   } finally {
+    hasLoaded.value = true
     loading.value = false
   }
 }

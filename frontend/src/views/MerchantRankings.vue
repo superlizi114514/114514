@@ -42,7 +42,7 @@
     </div>
 
     <!-- Rankings List -->
-    <div class="list-section" v-else>
+    <div class="list-section" v-else-if="hasLoaded">
       <div v-if="redList.length === 0 && blackList.length === 0" class="empty-state">
         <van-empty description="暂无榜单数据" />
       </div>
@@ -144,6 +144,7 @@ const redList = ref<any[]>([])
 const blackList = ref<any[]>([])
 const currentTab = ref('')
 const loading = ref(true)
+const hasLoaded = ref(false)
 
 const load = async () => {
   loading.value = true
@@ -175,6 +176,7 @@ const load = async () => {
     const errorMsg = e.response?.data?.message || e.message || '加载失败，请重试'
     showToast(errorMsg)
   } finally {
+    hasLoaded.value = true
     loading.value = false
   }
 }

@@ -102,7 +102,11 @@
         <van-loading color="#2563EB">加载中...</van-loading>
       </div>
 
-      <div v-else>
+      <div v-else-if="hasLoaded && list.length === 0" class="empty-state">
+        <van-empty description="暂无点评，快来抢沙发吧" />
+      </div>
+
+      <div v-else-if="hasLoaded">
         <div class="search-tip" v-if="isReadOnly">
           <van-icon name="info-o" class="tip-icon" />
           <span class="tip-text">当前为搜索浏览模式，如需点评请前往 <router-link to="/profiles">立马点评</router-link> 页面</span>
@@ -119,9 +123,7 @@
         <span class="list-count" v-if="list.length > 0">{{ list.length }} 条</span>
       </div>
 
-      <div v-if="list.length === 0" class="empty-state">
-        <van-empty description="暂无点评，快来抢沙发吧" />
-      </div>
+      <div v-else class="empty-state" />
 
       <div v-else class="list">
         <div v-for="item in list" :key="item.id" class="review-card">
@@ -194,6 +196,7 @@ const form = ref({ type: 'red', content: '', rating: 0, count: 1 })
 const submitting = ref(false)
 const remaining = ref(0)
 const loading = ref(true)
+const hasLoaded = ref(false)
 
 // 检查是否可以选择某个票数
 const canSelectCount = (n: number) => {
@@ -240,6 +243,7 @@ const load = async () => {
     showToast('加载失败，请重试')
     remaining.value = 0
   } finally {
+    hasLoaded.value = true
     loading.value = false
   }
 }
