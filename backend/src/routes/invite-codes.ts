@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
-import type { AppEnv } from '../worker.js'
-import type { Database } from '../db.js'
+import type { AppEnv } from '../types.js'
+import type { Database } from '../db-vercel.js'
 
 // 简单的密码哈希（与 auth.ts 保持一致）
 async function hashPassword(password: string): Promise<string> {

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
-import type { AppEnv } from '../worker.js'
-import type { Database } from '../db.js'
+import type { AppEnv } from '../types.js'
+import type { Database } from '../db-vercel.js'
 
 const router = new Hono<AppEnv>()
 

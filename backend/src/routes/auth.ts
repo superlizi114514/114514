@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { SignJWT, jwtVerify } from 'jose'
-import type { AppEnv } from '../worker.js'
-import type { Database } from '../db.js'
+import type { AppEnv } from '../types.js'
+import type { Database } from '../db-vercel.js'
 
 const router = new Hono<AppEnv>()
 
@@ -191,11 +191,13 @@ router.get('/captcha', async (c) => {
   const expireAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 
   try {
+    console.log('Creating captcha:', { sessionId, text, expireAt })
     await db.createCaptchaCode(sessionId, text, expireAt)
+    console.log('Captcha created successfully')
     return c.json({ success: true, sessionId, image: makeSvg(text) })
-  } catch (e) {
-    console.error('Captcha error:', e)
-    return c.json({ success: false, message: '验证码生成失败' }, 500)
+  } catch (e: any) {
+    console.error('Captcha error:', e?.message || e)
+    return c.json({ success: false, message: '验证码生成失败：' + (e?.message || 'unknown error') }, 500)
   }
 })
 

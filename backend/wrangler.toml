@@ -2,6 +2,7 @@ name = "shanxin-api"
 main = "src/worker.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
+node_compat = true
 
 [vars]
 JWT_SECRET = "your-jwt-secret-change-in-production"
