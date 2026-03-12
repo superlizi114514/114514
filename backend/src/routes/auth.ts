@@ -22,10 +22,13 @@ function generateCode(length: number): string {
 
 // 发送邮件函数（支持 Resend/SendGrid/腾讯云）
 async function sendEmailVerification(to: string, code: string, env: any) {
+  console.log('[SendEmail] Starting:', { to, code, hasResendKey: !!env.RESEND_API_KEY })
+
   // 方案 1: Resend (推荐) - 每月 3000 封免费
   if (env.RESEND_API_KEY) {
     try {
-      await fetch('https://api.resend.com/emails', {
+      console.log('[SendEmail] Using Resend')
+      const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${env.RESEND_API_KEY}`,
@@ -50,9 +53,15 @@ async function sendEmailVerification(to: string, code: string, env: any) {
           `
         })
       })
-      return true
+      const result = await response.json()
+      console.log('[SendEmail] Resend response:', result)
+      if (response.ok) {
+        return true
+      } else {
+        console.error('[SendEmail] Resend error:', result)
+      }
     } catch (e) {
-      console.error('Resend 邮件发送失败:', e)
+      console.error('[SendEmail] Resend exception:', e)
     }
   }
 
@@ -216,6 +225,7 @@ router.post('/send-email-code', async (c) => {
 
   try {
     const { email, captchaCode, captchaSession } = await c.req.json()
+    console.log('[SendEmailCode] Request:', { email, captchaCode, captchaSession })
 
     if (!email || !captchaCode || !captchaSession) {
       return c.json({ success: false, message: '参数不完整' })
@@ -231,6 +241,8 @@ router.post('/send-email-code', async (c) => {
     }
 
     const captcha = await db.findCaptchaCode(captchaSession)
+    console.log('[SendEmailCode] Captcha from DB:', captcha)
+
     if (!captcha) {
       return c.json({ success: false, message: '图形验证码不存在，请刷新' })
     }
@@ -242,6 +254,7 @@ router.post('/send-email-code', async (c) => {
     }
 
     if (captcha.code !== String(captchaCode).toUpperCase()) {
+      console.log('[SendEmailCode] Code mismatch:', { stored: captcha.code, input: String(captchaCode).toUpperCase() })
       return c.json({ success: false, message: '图形验证码错误，请重新输入' })
     }
 
@@ -269,16 +282,25 @@ router.post('/send-email-code', async (c) => {
     const expireAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
     await db.createEmailCode(email, code, expireAt)
+    console.log('[SendEmailCode] Code generated:', { email, code })
+
+    // 检查环境变量
+    console.log('[SendEmailCode] Env check:', {
+      hasResend: !!env.RESEND_API_KEY,
+      hasSendgrid: !!env.SENDGRID_API_KEY,
+      hasTencent: !!(env.TENCENT_SECRET_ID && env.TENCENT_SECRET_KEY)
+    })
 
     // 发送邮件
     const sent = await sendEmailVerification(email, code, env)
+    console.log('[SendEmailCode] Send result:', sent)
 
     return c.json({
       success: true,
       message: sent ? '验证码已发送，请检查邮箱' : '验证码已生成（邮件服务未配置，查看控制台）'
     })
   } catch (e) {
-    console.error('Send email code error:', e)
+    console.error('[SendEmailCode] Error:', e)
     return c.json({ success: false, message: '发送失败' }, 500)
   }
 })
