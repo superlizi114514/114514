@@ -476,6 +476,12 @@ onActivated(() => {
   letter-spacing: -0.5px;
 }
 
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .app-logo {
   width: 36px;
   height: 36px;
