@@ -95,9 +95,17 @@ app.notFound((c) => {
 
 // 错误处理
 app.onError((err, c) => {
-  console.error('Error:', err)
-  console.error('Error stack:', err.stack)
-  return c.json({ success: false, message: 'Internal Server Error: ' + err.message }, 500)
+  console.error('=== ERROR START ===')
+  console.error('Message:', err.message)
+  console.error('Stack:', err.stack)
+  console.error('Name:', err.name)
+  console.error('=== ERROR END ===')
+  return c.json({
+    success: false,
+    message: 'Error: ' + err.message,
+    stack: err.stack,
+    name: err.name
+  }, 500)
 })
 
 // 导出 Vercel Serverless Function handlers
