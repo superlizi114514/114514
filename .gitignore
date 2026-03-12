@@ -28,6 +28,7 @@ build/
 # Claude 配置
 CLAUDE.md
 .claude/
+更新.md
 
 # 其他项目（只保留 backend 和 frontend）
 !backend/
