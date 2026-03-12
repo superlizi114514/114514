@@ -16,7 +16,10 @@
 
     <!-- Header -->
     <div class="header">
-      <h1 class="app-title">山信黑红榜</h1>
+      <div class="header-title-wrapper">
+        <h1 class="app-title">山信黑红榜</h1>
+        <img src="../assets/tyloo.jpg" alt="logo" class="app-logo" />
+      </div>
       <p class="app-subtitle">山东信院学生的真实点评社区</p>
       <div v-if="isLoggedIn" class="campus-selector-top" @click="showCampusPicker = true">
         <van-icon name="location-o" />
@@ -452,12 +455,28 @@ onActivated(() => {
   margin-bottom: 16px;
 }
 
+.header-title-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
 .app-title {
   font-size: 22px;
   font-weight: 800;
   color: #881337;
-  margin: 0 0 6px 0;
+  margin: 0;
   letter-spacing: -0.5px;
+}
+
+.app-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .app-subtitle {
