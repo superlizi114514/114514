@@ -281,10 +281,12 @@ router.post('/:id/reviews', authMiddleware, async (c) => {
   // 检查次数限制
   const limitCheck = await checkReviewLimits(db, userId, profileId, reviewCount)
   if (!limitCheck.success) {
+    console.log('[createReview] Limit check failed:', limitCheck.message)
     return c.json({ success: false, message: limitCheck.message })
   }
 
   const isReviewerFirstToday = (limitCheck.todayReviewsForThisProfile || 0) === 0
+  console.log('[createReview] isReviewerFirstToday:', isReviewerFirstToday)
 
   // 计算票数
   // 规则：每天给某个人的第一票是大票，后续追加的票都是小票
@@ -298,9 +300,11 @@ router.post('/:id/reviews', authMiddleware, async (c) => {
       smallVotes = reviewCount - 1  // 其余是小票
     }
   }
+  console.log('[createReview] votes:', { reviewCount, bigVotes, smallVotes })
   // 如果不是第一次，所有票都是小票 (bigVotes=0, smallVotes=reviewCount)
 
   const created = await db.createProfileReview(userId, profileId, type, content, true, reviewCount, bigVotes, smallVotes)
+  console.log('[createReview] created:', { id: created.id, totalCount: created.totalCount })
 
   return c.json({ success: true, data: [created], count: reviewCount, bigVotes, smallVotes })
 })
