@@ -18,7 +18,7 @@
     <div class="header">
       <div class="header-title-wrapper">
         <h1 class="app-title">山信黑红榜</h1>
-        <img src="../assets/tyloo.jpg" alt="logo" class="app-logo" />
+        <img :src="logoImage" alt="logo" class="app-logo" />
       </div>
       <p class="app-subtitle">山东信院学生的真实点评社区</p>
       <div v-if="isLoggedIn" class="campus-selector-top" @click="showCampusPicker = true">
@@ -264,6 +264,7 @@
 import { onMounted, ref, onActivated } from 'vue'
 import { showToast } from 'vant'
 import http from '../api/http'
+import logoImage from '../assets/tyloo.jpg'
 
 const isLoggedIn = ref(false)
 const userEmail = ref('')
