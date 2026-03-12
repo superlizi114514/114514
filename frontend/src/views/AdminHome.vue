@@ -128,16 +128,21 @@
           <h2>邀请码管理</h2>
           <van-icon name="cross" @click="showInviteManage = false" />
         </div>
-        <van-button type="primary" block round @click="generateInviteCode" :loading="generating">
-          {{ generating ? '生成中...' : '生成新邀请码' }}
-        </van-button>
+        <div class="invite-actions">
+          <van-button type="primary" block round @click="generateInviteCode" :loading="generating">
+            {{ generating ? '生成中...' : '生成新邀请码' }}
+          </van-button>
+          <van-button plain block round @click="toggleShowAllInviteCodes" v-if="inviteList.length > 0">
+            {{ showAllInviteCodes ? '收起列表' : '查看全部邀请码' }}
+          </van-button>
+        </div>
         <div v-if="generatedCode" class="generated-code">
           <van-icon name="success" style="color: #10b981;" />
           <span>新邀请码：{{ generatedCode }}</span>
         </div>
-        <div v-if="inviteList.length > 0" class="invite-list">
-          <h3>邀请码列表（最近 20 个）</h3>
-          <div v-for="item in recentInviteList" :key="item.id" class="invite-item">
+        <div v-if="inviteList.length > 0 && showAllInviteCodes" class="invite-list">
+          <h3>邀请码列表（全部 {{ inviteList.length }} 个）</h3>
+          <div v-for="item in displayedInviteList" :key="item.id" class="invite-item">
             <span class="code">{{ item.code }}</span>
             <van-tag :type="item.usedBy ? 'success' : 'primary'">
               {{ item.usedBy ? '已使用' : '未使用' }}
@@ -189,8 +194,24 @@
           <h2>用户管理</h2>
           <van-icon name="cross" @click="showUserList = false" />
         </div>
-        <div v-if="userList.length > 0" class="user-list">
-          <div v-for="user in userList" :key="user.id" class="user-item">
+        <!-- 搜索栏 -->
+        <div class="search-bar">
+          <van-field
+            v-model="userSearchKeyword"
+            placeholder="搜索邮箱/昵称"
+            clearable
+            size="small"
+            left-icon="search"
+            @input="filterUsers"
+          />
+        </div>
+        <!-- 统计信息 -->
+        <div class="profile-stats">
+          <span>共 {{ userList.length }} 人</span>
+          <span v-if="filteredUsers.length !== userList.length"> | 筛选后 {{ filteredUsers.length }} 人</span>
+        </div>
+        <div v-if="filteredUsers.length > 0" class="user-list">
+          <div v-for="user in filteredUsers" :key="user.id" class="user-item">
             <div class="user-info">
               <span class="email">{{ user.email }}</span>
               <span class="nickname" v-if="user.nickname">({{ user.nickname }})</span>
@@ -215,6 +236,9 @@
               <van-button size="mini" type="danger" plain @click="confirmDeleteUser(user)" v-if="!isAdminEmail(user.email)">删除</van-button>
             </div>
           </div>
+        </div>
+        <div v-else class="empty-state">
+          <van-empty :description="userList.length === 0 ? '暂无用户数据' : '无匹配结果'" />
         </div>
       </div>
     </van-popup>
@@ -662,6 +686,9 @@ const grantingSupport = ref(false)
 const inviteList = ref<any[]>([])
 const blockedWords = ref<any[]>([])
 const userList = ref<any[]>([])
+const filteredUsers = ref<any[]>([]) // 筛选后的用户列表
+const userSearchKeyword = ref('') // 用户搜索关键词
+const showAllInviteCodes = ref(false) // 是否显示全部邀请码
 const currentUser = ref<any>(null)
 const titleInput = ref('')
 const titleShowEnabled = ref(false)
@@ -828,6 +855,8 @@ const loadUserList = async () => {
     const { data } = await http.get('/api/admin/users')
     if (data.success) {
       userList.value = data.data || []
+      filteredUsers.value = userList.value
+      userSearchKeyword.value = ''
       showUserList.value = true
     } else {
       showToast(data.message || '加载失败')
@@ -873,13 +902,34 @@ const displayedUserTitles = computed(() => {
   return userAvailableTitles.value.slice(0, 3)
 })
 
-// 邀请码列表（只显示最近 20 个）
-const recentInviteList = computed(() => {
+// 邀请码列表显示（支持切换全部/最近 20 个）
+const displayedInviteList = computed(() => {
+  if (showAllInviteCodes.value) {
+    return inviteList.value
+  }
   return inviteList.value.slice(0, 20)
 })
 
+const toggleShowAllInviteCodes = () => {
+  showAllInviteCodes.value = !showAllInviteCodes.value
+}
+
 const toggleUserTitleExpand = () => {
   isUserTitleExpanded.value = !isUserTitleExpanded.value
+}
+
+// 用户筛选函数
+const filterUsers = () => {
+  const keyword = userSearchKeyword.value.toLowerCase()
+  if (!keyword) {
+    filteredUsers.value = userList.value
+    return
+  }
+  filteredUsers.value = userList.value.filter((user) => {
+    const emailMatch = user.email?.toLowerCase().includes(keyword)
+    const nicknameMatch = user.nickname?.toLowerCase().includes(keyword)
+    return emailMatch || nicknameMatch
+  })
 }
 
 const updateUserTitle = async (user: any) => {
@@ -1527,6 +1577,17 @@ onMounted(async () => {
   color: #047857;
 }
 
+/* 邀请码管理操作区 */
+.invite-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.invite-actions .van-button {
+  flex: 1;
+}
+
 /* 人员管理搜索栏 */
 .search-bar {
   display: flex;
@@ -1718,7 +1779,7 @@ onMounted(async () => {
   font-size: 14px;
   font-weight: 600;
   color: #6b7280;
-  margin: 0 0 12px 0;
+  margin: 12px 0;
 }
 
 .invite-item, .word-item, .user-item {
