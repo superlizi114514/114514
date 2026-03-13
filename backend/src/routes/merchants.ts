@@ -82,7 +82,9 @@ async function checkReviewLimits(
 ): Promise<{ success: boolean; message?: string; todayReviewsForThisMerchant?: number }> {
   const user = await db.findUserById(userId)
   const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  // Vercel 服务器使用 UTC 时区，需要转换为 UTC+8（中国时间）
+  const utc8Now = new Date(now.getTime() + 8 * 3600000)
+  const start = new Date(Date.UTC(utc8Now.getUTCFullYear(), utc8Now.getUTCMonth(), utc8Now.getUTCDate()))
   const end = new Date(start)
   end.setDate(end.getDate() + 1)
 

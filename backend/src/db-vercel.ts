@@ -263,22 +263,22 @@ export class Database {
   }
 
   async countProfileReviewsByReviewerAndProfile(reviewerId: number, profileId: number, start: string, end: string): Promise<number> {
-    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)
+    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)，并添加 'utc' 修饰符进行时区转换
     const startStr = start.replace('T', ' ').substring(0, 19)
     const endStr = end.replace('T', ' ').substring(0, 19)
     const result = await queryFirst<{ count: number }>(
-      'SELECT COUNT(*) as count FROM profile_reviews WHERE reviewerId = ? AND profileId = ? AND datetime(createdAt) >= ? AND datetime(createdAt) < ?',
+      `SELECT COUNT(*) as count FROM profile_reviews WHERE reviewerId = ? AND profileId = ? AND datetime(createdAt, 'utc') >= ? AND datetime(createdAt, 'utc') < ?`,
       [reviewerId, profileId, startStr, endStr]
     )
     return result?.count || 0
   }
 
   async findProfileReviewsTodayByReviewer(reviewerId: number, start: string, end: string): Promise<{ totalCount: number }[]> {
-    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)
+    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)，并添加 'utc' 修饰符进行时区转换
     const startStr = start.replace('T', ' ').substring(0, 19)
     const endStr = end.replace('T', ' ').substring(0, 19)
     return executeQuery<{ totalCount: number }>(
-      'SELECT totalCount FROM profile_reviews WHERE reviewerId = ? AND datetime(createdAt) >= ? AND datetime(createdAt) < ?',
+      `SELECT totalCount FROM profile_reviews WHERE reviewerId = ? AND datetime(createdAt, 'utc') >= ? AND datetime(createdAt, 'utc') < ?`,
       [reviewerId, startStr, endStr]
     )
   }
@@ -373,19 +373,22 @@ export class Database {
     start: string,
     end: string
   ): Promise<number> {
+    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)，并添加 'utc' 修饰符进行时区转换
+    const startStr = start.replace('T', ' ').substring(0, 19)
+    const endStr = end.replace('T', ' ').substring(0, 19)
     const result = await queryFirst<{ count: number }>(
-      'SELECT COUNT(*) as count FROM merchant_reviews WHERE reviewerId = ? AND merchantId = ? AND createdAt >= ? AND createdAt < ?',
-      [reviewerId, merchantId, start, end]
+      `SELECT COUNT(*) as count FROM merchant_reviews WHERE reviewerId = ? AND merchantId = ? AND datetime(createdAt, 'utc') >= ? AND datetime(createdAt, 'utc') < ?`,
+      [reviewerId, merchantId, startStr, endStr]
     )
     return result?.count || 0
   }
 
   async findMerchantReviewsTodayByReviewer(reviewerId: number, start: string, end: string): Promise<{ totalCount: number }[]> {
-    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)
+    // 将 ISO 时间转换为 SQLite datetime 格式 (YYYY-MM-DD HH:MM:SS)，并添加 'utc' 修饰符进行时区转换
     const startStr = start.replace('T', ' ').substring(0, 19)
     const endStr = end.replace('T', ' ').substring(0, 19)
     return executeQuery<{ totalCount: number }>(
-      'SELECT totalCount FROM merchant_reviews WHERE reviewerId = ? AND datetime(createdAt) >= ? AND datetime(createdAt) < ?',
+      `SELECT totalCount FROM merchant_reviews WHERE reviewerId = ? AND datetime(createdAt, 'utc') >= ? AND datetime(createdAt, 'utc') < ?`,
       [reviewerId, startStr, endStr]
     )
   }
