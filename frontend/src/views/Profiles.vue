@@ -63,6 +63,14 @@
           readonly
           @click="showCampusPicker = true"
         />
+        <!-- 学生/老师选择 -->
+        <div class="role-selector-row">
+          <span class="role-label">身份：</span>
+          <van-radio-group v-model="form.role" direction="horizontal">
+            <van-radio name="student">学生</van-radio>
+            <van-radio name="teacher">老师</van-radio>
+          </van-radio-group>
+        </div>
         <div class="class-input-row">
           <van-field
             v-model="form.grade"
@@ -70,20 +78,23 @@
             placeholder="25"
             type="number"
             maxlength="2"
+            :disabled="form.role === 'teacher'"
             required
           />
           <span class="class-label">级</span>
           <van-field
             v-model="form.department"
             label="系"
-            placeholder="电子"
+            :placeholder="form.role === 'teacher' ? '老师系' : '电子'"
             maxlength="4"
-            tip="系名必填，前两个字即可"
-            required
+            :disabled="form.role === 'teacher'"
+            :tip="form.role === 'teacher' ? '老师无需填写' : '系名必填，前两个字即可'"
+            :required="form.role === 'student'"
           />
           <span class="class-label">系</span>
         </div>
-        <p class="class-tip">年级和系必填 · 年级填后两个年份即可，系填前两个字即可</p>
+        <p class="class-tip" v-if="form.role === 'student'">年级和系必填 · 年级填后两个年份即可，系填前两个字即可</p>
+        <p class="class-tip" v-else>老师将归类到「00 级老师系」</p>
         <div class="submit-section">
           <van-button
             class="submit-btn"
@@ -198,38 +209,39 @@
         </div>
 
         <div v-else class="list">
-        <div
-          v-for="item in list"
-          :key="item.name"
-          class="profile-card"
-          @click="openProfile(item.name)"
-        >
-          <div class="profile-avatar">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
-          <div class="profile-content">
-            <div class="profile-name">{{ item.name }}</div>
-            <div class="profile-meta">
-              <span v-if="item.campusDisplay || item.allCampuses?.length > 0" class="meta-item">
-                <van-icon name="location-o" />
-                {{ item.campusDisplay || item.allCampuses?.join('/') }}
-              </span>
-              <span v-if="item.classNameDisplay || item.allClassNames?.length > 0" class="meta-item">
-                <van-icon name="cluster-o" />
-                {{ item.classNameDisplay || item.allClassNames?.join('/') }}
-              </span>
-              <span v-if="!item.campusDisplay && !item.classNameDisplay && (!item.allCampuses || item.allCampuses.length === 0) && (!item.allClassNames || item.allClassNames.length === 0)" class="meta-placeholder">
-                暂无详细信息
-              </span>
+          <div
+            v-for="item in list"
+            :key="item.name"
+            class="profile-card"
+            @click="openProfile(item.name)"
+          >
+            <div class="profile-avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
             </div>
-          </div>
-          <div class="profile-arrow">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
+            <div class="profile-content">
+              <div class="profile-name">{{ item.name }}</div>
+              <div class="profile-meta">
+                <span v-if="item.campusDisplay || item.allCampuses?.length > 0" class="meta-item">
+                  <van-icon name="location-o" />
+                  {{ item.campusDisplay || item.allCampuses?.join('/') }}
+                </span>
+                <span v-if="item.classNameDisplay || item.allClassNames?.length > 0" class="meta-item">
+                  <van-icon name="cluster-o" />
+                  {{ item.classNameDisplay || item.allClassNames?.join('/') }}
+                </span>
+                <span v-if="!item.campusDisplay && !item.classNameDisplay && (!item.allCampuses || item.allCampuses.length === 0) && (!item.allClassNames || item.allClassNames.length === 0)" class="meta-placeholder">
+                  暂无详细信息
+                </span>
+              </div>
+            </div>
+            <div class="profile-arrow">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -250,11 +262,12 @@ const hasLoaded = ref(false)
 const isLoggedIn = ref(false)
 const dailyLimit = ref(3)
 const remaining = ref(0)
-const form = ref<{ name: string; campus: string; grade: string; department: string }>({
+const form = ref<{ name: string; campus: string; grade: string; department: string; role: 'student' | 'teacher' }>({
   name: '',
   campus: localStorage.getItem('selectedCampus') || '',
   grade: '',
-  department: ''
+  department: '',
+  role: 'student'
 })
 const submitting = ref(false)
 const showReviewDialog = ref(false)
@@ -299,12 +312,20 @@ const selectExistingProfile = (index: number) => {
     selectedExistingIndex.value = index
     form.value.campus = profile.campus
     // 解析 className，如 "25 级电子系" -> grade="25", department="电子"
-    if (profile.className) {
+    // 如果是 "00 级老师系"，则设置为老师身份
+    if (profile.className === '00 级老师系') {
+      form.value.role = 'teacher'
+      form.value.grade = ''
+      form.value.department = ''
+    } else if (profile.className) {
+      form.value.role = 'student'
       const match = profile.className.match(/^(\d{2,4}) 级 ([\u4e00-\u9fa5]{2,4}) 系$/)
       if (match) {
         form.value.grade = match[1]
         form.value.department = match[2]
       }
+    } else {
+      form.value.role = 'student'
     }
     showToast('已选择已有人员，可直接提交点评')
   }
@@ -394,18 +415,22 @@ const createProfile = async () => {
     return
   }
 
-  // 验证：必须填写年级和系
-  if (!form.value.grade?.trim()) {
-    showToast('请输入年级')
-    return
-  }
-  if (!form.value.department?.trim()) {
-    showToast('请输入系')
-    return
+  // 验证：必须填写年级和系（学生身份需要验证）
+  if (form.value.role === 'student') {
+    if (!form.value.grade?.trim()) {
+      showToast('请输入年级')
+      return
+    }
+    if (!form.value.department?.trim()) {
+      showToast('请输入系')
+      return
+    }
   }
 
-  // 组合班级：年级 + 级 + 系名 + 系
-  const className = `${form.value.grade.trim()}级${form.value.department.trim()}系`
+  // 组合班级：老师固定为「00 级老师系」，学生按年级 + 级 + 系名 + 系
+  const className = form.value.role === 'teacher'
+    ? '00 级老师系'
+    : `${form.value.grade.trim()}级${form.value.department.trim()}系`
 
   submitting.value = true
   try {
@@ -434,7 +459,7 @@ const createProfile = async () => {
 
 const skipReview = () => {
   showReviewDialog.value = false
-  form.value = { name: '', campus: null, grade: '', department: '' }
+  form.value = { name: '', campus: '', grade: '', department: '', role: 'student' }
   newlyCreatedProfile.value = null
   existingProfiles.value = []
   selectedExistingIndex.value = null
@@ -628,6 +653,31 @@ onActivated(() => {
   font-size: 16px;
   font-weight: 600;
   color: #1F2937;
+}
+
+/* Role Selector */
+.role-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  margin-bottom: 8px;
+}
+
+.role-label {
+  font-size: 14px;
+  color: #6B7280;
+  white-space: nowrap;
+}
+
+.role-selector-row .van-radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.role-selector-row .van-radio {
+  display: flex;
+  align-items: center;
 }
 
 /* Existing Profiles Tip */
